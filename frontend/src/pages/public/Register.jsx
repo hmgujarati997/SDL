@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { formatApiError, LOGO } from "@/lib/api";
+import { formatApiError, LOGO_MARK as LOGO } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function Register() {

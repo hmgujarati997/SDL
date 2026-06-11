@@ -36,5 +36,6 @@ export function fmtDate(iso) {
 }
 
 export const LOGO = "https://customer-assets.emergentagent.com/job_3147c62a-2b30-4c49-a67d-6d5a71dfc726/artifacts/b9orur0u_Shree%20Dental%20Lab.png";
+export const LOGO_MARK = "https://customer-assets.emergentagent.com/job_dental-order-hub-2/artifacts/uwhapyv1_Shree%20Dental%20Lab%20-%20Copy.png";
 
 export default api;

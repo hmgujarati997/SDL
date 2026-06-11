@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { LOGO } from "@/lib/api";
-import api from "@/lib/api";
+import api, { LOGO_MARK as LOGO } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, PlusCircle, Package, Users, Tag, FileText, User, Boxes,
