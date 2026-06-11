@@ -33,6 +33,13 @@ async def update_product(pid: str, body: dict = Body(...), user: dict = Depends(
     return {"ok": True}
 
 
+@router.delete("/products/{pid}")
+async def delete_product(pid: str, user: dict = Depends(require_roles("admin"))):
+    await db.products.delete_one({"id": pid})
+    await db.product_tiers.delete_many({"product_id": pid})
+    return {"ok": True}
+
+
 @router.post("/tiers")
 async def create_tier(body: dict = Body(...), user: dict = Depends(require_roles("admin"))):
     doc = {"id": gen_id(), "active": True, "gst_rate": 5, "urgent_surcharge": 0,
@@ -47,6 +54,12 @@ async def create_tier(body: dict = Body(...), user: dict = Depends(require_roles
 async def update_tier(tid: str, body: dict = Body(...), user: dict = Depends(require_roles("admin"))):
     body.pop("id", None)
     await db.product_tiers.update_one({"id": tid}, {"$set": body})
+    return {"ok": True}
+
+
+@router.delete("/tiers/{tid}")
+async def delete_tier(tid: str, user: dict = Depends(require_roles("admin"))):
+    await db.product_tiers.delete_one({"id": tid})
     return {"ok": True}
 
 

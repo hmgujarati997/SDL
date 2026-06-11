@@ -3,7 +3,7 @@ import api, { inr, formatApiError } from "@/lib/api";
 import { PageHeader, Card, Btn, inputCls } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 export default function Catalog() {
   const [products, setProducts] = useState(null);
@@ -20,6 +20,14 @@ export default function Catalog() {
     const name = prompt("Product name?"); if (!name) return;
     try { await api.post("/products", { name, category: "Misc", unit_type: "per tooth", default_tat: 4 }); toast.success("Product added"); load(); } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); }
   };
+  const removeProduct = async (p) => {
+    if (!window.confirm(`Remove "${p.name}" and all its tiers? This cannot be undone.`)) return;
+    try { await api.delete(`/products/${p.id}`); toast.success("Product removed"); load(); } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); }
+  };
+  const removeTier = async (t) => {
+    if (!window.confirm(`Remove tier "${t.name}"?`)) return;
+    try { await api.delete(`/tiers/${t.id}`); toast.success("Tier removed"); load(); } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); }
+  };
 
   if (!products) return <Spinner />;
   return (
@@ -31,10 +39,13 @@ export default function Catalog() {
           <Card key={p.id}>
             <div className="flex items-center justify-between">
               <div><h3 className="font-heading text-lg font-bold">{p.name}</h3><p className="text-xs text-brand-taupe">{p.category} · {p.unit_type} · TAT {p.default_tat}d</p></div>
-              <Btn variant="outline" onClick={() => addTier(p.id)}><Plus className="h-4 w-4" />Tier</Btn>
+              <div className="flex items-center gap-2">
+                <Btn variant="outline" onClick={() => addTier(p.id)}><Plus className="h-4 w-4" />Tier</Btn>
+                <Btn variant="ghost" data-testid={`remove-product-${p.id}`} onClick={() => removeProduct(p)}><Trash2 className="h-4 w-4" />Remove</Btn>
+              </div>
             </div>
             <div className="mt-3 space-y-2">
-              {p.tiers.map((t) => <TierRow key={t.id} tier={t} onSave={saveTier} />)}
+              {p.tiers.map((t) => <TierRow key={t.id} tier={t} onSave={saveTier} onRemove={removeTier} />)}
             </div>
           </Card>
         ))}
@@ -43,7 +54,7 @@ export default function Catalog() {
   );
 }
 
-function TierRow({ tier, onSave }) {
+function TierRow({ tier, onSave, onRemove }) {
   const [t, setT] = useState(tier);
   return (
     <div className="grid grid-cols-2 items-end gap-2 rounded-xl border border-brand-taupe/15 p-3 sm:grid-cols-6">
@@ -54,6 +65,7 @@ function TierRow({ tier, onSave }) {
       <div><label className="text-xs text-brand-taupe">TAT</label><input type="number" className={inputCls} value={t.tat_days} onChange={(e) => setT({ ...t, tat_days: Number(e.target.value) })} /></div>
       <div className="flex gap-2">
         <Btn className="flex-1" onClick={() => onSave(t)}>Save</Btn>
+        <Btn variant="ghost" onClick={() => onRemove(t)}><Trash2 className="h-4 w-4" /></Btn>
       </div>
       <div className="col-span-2 sm:col-span-6 flex items-center gap-4">
         <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={t.most_popular} onChange={(e) => setT({ ...t, most_popular: e.target.checked })} /> Most popular</label>

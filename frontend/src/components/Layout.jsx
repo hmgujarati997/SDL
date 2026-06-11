@@ -169,9 +169,7 @@ export function PublicNav() {
           {/* Left */}
           <div className="flex items-center gap-5">
             <Link to="/" data-testid="logo-link" className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-brand-charcoal sm:h-10 sm:w-10">
-                <img src={LOGO} alt="SDL" className="h-full w-full object-cover" />
-              </span>
+              <img src={LOGO} alt="Shree Dental Lab" className="h-9 w-9 rounded-lg object-cover sm:h-10 sm:w-10" />
               <span className="hidden font-heading text-sm font-bold tracking-tight text-brand-graphite sm:block">Shree Dental Lab</span>
             </Link>
             <div className="hidden items-center gap-6 md:flex">
