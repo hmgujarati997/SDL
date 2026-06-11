@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { PublicLayout } from "@/components/Layout";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { MapPin, Phone, Mail } from "lucide-react";
+import { Phone, Mail } from "lucide-react";
 
 export default function Contact() {
   const [lab, setLab] = useState({});
@@ -19,7 +19,6 @@ export default function Contact() {
       <section className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid gap-10 lg:grid-cols-2">
           <div className="space-y-5">
-            <div className="flex items-start gap-4"><MapPin className="h-6 w-6 text-brand-red" /><div><p className="font-semibold">Address</p><p className="text-sm text-brand-taupe">{lab.address || "Ahmedabad, Gujarat, India"}</p></div></div>
             <div className="flex items-start gap-4"><Phone className="h-6 w-6 text-brand-red" /><div><p className="font-semibold">Phone</p><p className="text-sm text-brand-taupe">{lab.phone || "+91 90000 00000"}</p></div></div>
             <div className="flex items-start gap-4"><Mail className="h-6 w-6 text-brand-red" /><div><p className="font-semibold">Email</p><p className="text-sm text-brand-taupe">{lab.email || "info@shreedentallab.com"}</p></div></div>
           </div>

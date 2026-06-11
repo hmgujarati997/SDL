@@ -158,8 +158,6 @@ export function PublicNav() {
   const links = [
     { to: "/", label: "Home" },
     { to: "/about", label: "About" },
-    { to: "/products", label: "Products" },
-    { to: "/zirconia", label: "Zirconia" },
     { to: "/contact", label: "Contact" },
   ];
   return (
@@ -231,8 +229,6 @@ export function Footer() {
           <p className="font-heading font-semibold text-white">Company</p>
           <ul className="mt-3 space-y-2 text-sm">
             <li><Link to="/about" className="hover:text-brand-gold">About Us</Link></li>
-            <li><Link to="/products" className="hover:text-brand-gold">Products</Link></li>
-            <li><Link to="/zirconia" className="hover:text-brand-gold">Zirconia Crown & Bridge</Link></li>
             <li><Link to="/contact" className="hover:text-brand-gold">Contact</Link></li>
           </ul>
         </div>

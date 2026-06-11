@@ -8,8 +8,6 @@ import { toast } from "sonner";
 
 import Home from "@/pages/public/Home";
 import About from "@/pages/public/About";
-import Products from "@/pages/public/Products";
-import ZirconiaCB from "@/pages/public/ZirconiaCB";
 import Contact from "@/pages/public/Contact";
 import Login from "@/pages/public/Login";
 import Register from "@/pages/public/Register";
@@ -80,8 +78,6 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/zirconia" element={<ZirconiaCB />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

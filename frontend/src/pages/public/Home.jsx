@@ -63,27 +63,22 @@ export default function Home() {
             Strategy-led craftsmanship, delivering<br className="hidden lg:block" /> restorations that fit, function and last.
           </h2>
 
-          {/* desktop */}
-          <div className="hidden items-center gap-8 px-12 lg:grid lg:grid-cols-12">
-            <img src={IMG.small} alt="zirconia detail" className="col-span-3 aspect-[3/4] w-full rounded-2xl object-cover" />
-            <div className="col-span-5 flex flex-col items-start px-2">
-              <p className="text-[16px] font-medium leading-[1.65] text-brand-graphite">
+          {/* content */}
+          <div className="grid gap-10 px-5 sm:px-8 lg:grid-cols-2 lg:items-center lg:gap-14 lg:px-12">
+            <div className="order-2 lg:order-1">
+              <p className="max-w-md text-base font-medium leading-[1.7] text-brand-graphite sm:text-lg">
                 Through digital design, precision milling and meticulous finishing, we help dentists deliver beautiful, durable zirconia restorations — case after case, on reliable timelines.
               </p>
-              <RollButton to="/about" label="About our studio" variant="red" className="mt-7" />
+              <RollButton to="/about" label="About our studio" variant="red" className="mt-8" />
+              <div className="mt-10 grid grid-cols-3 gap-4 border-t border-brand-taupe/15 pt-7">
+                <Stat n="10k+" l="Units delivered" />
+                <Stat n="4 days" l="Avg. turnaround" />
+                <Stat n="99%" l="Fit accuracy" />
+              </div>
             </div>
-            <img src={IMG.large} alt="dental lab" className="col-span-4 aspect-[4/5] w-full rounded-2xl object-cover" />
-          </div>
-
-          {/* mobile/tablet */}
-          <div className="px-5 sm:px-8 lg:hidden">
-            <p className="text-[15px] font-medium leading-[1.6] text-brand-graphite sm:text-[17px]">
-              Through digital design, precision milling and meticulous finishing, we help dentists deliver beautiful, durable zirconia restorations — case after case, on reliable timelines.
-            </p>
-            <RollButton to="/about" label="About our studio" variant="red" className="mt-6" />
-            <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5">
-              <img src={IMG.small} alt="" className="aspect-[4/3] w-full rounded-xl object-cover sm:rounded-2xl" />
-              <img src={IMG.large} alt="" className="aspect-[4/3] w-full rounded-xl object-cover sm:rounded-2xl" />
+            <div className="order-1 grid grid-cols-2 gap-4 sm:gap-5 lg:order-2">
+              <img src={IMG.small} alt="Zirconia restoration detail" className="aspect-[3/4] w-full rounded-2xl object-cover lg:mt-10" />
+              <img src={IMG.large} alt="Shree Dental Lab" className="aspect-[3/4] w-full rounded-2xl object-cover" />
             </div>
           </div>
         </div>
@@ -102,7 +97,7 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-5 px-5 sm:gap-6 sm:px-8 md:grid-cols-2 lg:gap-7 lg:px-12">
             {services.map((s) => (
               <div key={s.title}>
-                <Link to="/zirconia" className={`group relative block overflow-hidden rounded-2xl bg-brand-charcoal ${s.square ? "aspect-square" : "aspect-[329/246]"}`}>
+                <Link to="/register" className={`group relative block overflow-hidden rounded-2xl bg-brand-charcoal ${s.square ? "aspect-square" : "aspect-[329/246]"}`}>
                   <img src={s.img} alt={s.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute bottom-4 left-4 flex h-9 w-9 items-center overflow-hidden rounded-full bg-white transition-all duration-300 ease-in-out group-hover:w-[150px]">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center">
@@ -120,10 +115,10 @@ export default function Home() {
           {/* process */}
           <div className="mb-6 mt-20 flex items-center gap-3 px-5 sm:px-8 lg:px-12">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-charcoal text-[11px] font-semibold text-white sm:h-7 sm:w-7 sm:text-xs">3</span>
-            <span className="rounded-full border border-brand-taupe/40 px-3 py-1 text-xs font-medium text-brand-graphite sm:px-4 sm:py-1.5 sm:text-[13px]">How it works</span>
+            <span className="rounded-full border border-brand-taupe/40 px-3 py-1 text-xs font-medium text-brand-graphite sm:px-4 sm:py-1.5 sm:text-[13px]">How to order</span>
           </div>
           <h2 className="font-clamp-h2 mb-12 px-5 font-heading font-medium leading-[1.12] tracking-[-0.02em] text-brand-graphite sm:px-8 lg:px-12">
-            From scan to seat in three simple steps
+            Ordering made effortless — in three simple steps
           </h2>
           <div className="grid gap-8 px-5 sm:px-8 md:grid-cols-3 lg:px-12">
             {[["Place & upload", "Create patients, tap teeth on the FDI chart, set shades, upload scans or ship impressions."],
@@ -149,5 +144,14 @@ export default function Home() {
         </div>
       </section>
     </PublicLayout>
+  );
+}
+
+function Stat({ n, l }) {
+  return (
+    <div>
+      <p className="font-heading text-2xl font-bold tracking-tight text-brand-red sm:text-3xl">{n}</p>
+      <p className="mt-1 text-xs leading-tight text-brand-taupe">{l}</p>
+    </div>
   );
 }
