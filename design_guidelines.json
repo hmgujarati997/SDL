@@ -1,0 +1,154 @@
+{
+  "project_context": {
+    "name": "Shree Dental Lab",
+    "domain": "Premium Dental Lab / B2B Healthcare SaaS",
+    "theme": "Light Theme",
+    "archetype": "Organic & Earthy / Luxury Hybrid",
+    "vibe": "Premium, clean, precise, trustworthy, professional.",
+    "key_differentiators": "Avoid generic medical blue. Emphasize premium red and gold. Mobile-first focus. Clean and uncluttered dashboard design."
+  },
+  "color_system": {
+    "primary": {
+      "name": "Primary Red",
+      "hex": "#B82024",
+      "tailwind": "bg-[#B82024] text-white",
+      "usage": "Primary CTAs, active states, key highlights, selected tooth on FDI chart. Use sparingly to maintain premium feel."
+    },
+    "secondary": {
+      "name": "Deep Ruby Red",
+      "hex": "#8F161A",
+      "tailwind": "bg-[#8F161A]",
+      "usage": "Hover states for primary buttons, deep accents, borders."
+    },
+    "background": {
+      "name": "Warm Ivory",
+      "hex": "#F8F5F0",
+      "tailwind": "bg-[#F8F5F0]",
+      "usage": "Main application and page background. Avoid pure white backgrounds for the body."
+    },
+    "surface": {
+      "name": "Porcelain White",
+      "hex": "#FFFFFF",
+      "tailwind": "bg-[#FFFFFF]",
+      "usage": "Cards, modals, forms, dropdowns. Must contrast with the Warm Ivory background."
+    },
+    "accent": {
+      "name": "Champagne Gold",
+      "hex": "#C9A45C",
+      "tailwind": "bg-[#C9A45C] text-[#C9A45C] border-[#C9A45C]",
+      "usage": "Badges, 'add 1 more unit to save' nudges, small button accents, success/premium indicators."
+    },
+    "text_primary": {
+      "name": "Graphite Text",
+      "hex": "#2B2B2B",
+      "tailwind": "text-[#2B2B2B]",
+      "usage": "Main body text, headings."
+    },
+    "text_secondary": {
+      "name": "Muted Taupe Grey",
+      "hex": "#7A6F6A",
+      "tailwind": "text-[#7A6F6A]",
+      "usage": "Subtitles, placeholder text, secondary information, table headers."
+    },
+    "layout_elements": {
+      "name": "Charcoal Black",
+      "hex": "#111111",
+      "tailwind": "bg-[#111111] text-white",
+      "usage": "Main navigation headers, footers, high-contrast dark sections. The logo should sit on this background."
+    }
+  },
+  "typography": {
+    "heading_font": "Cabinet Grotesk",
+    "body_font": "Satoshi",
+    "import_url": "https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,500,700,400,900&f[]=satoshi@900,700,500,300,400&display=swap",
+    "rules": [
+      "Use 'Cabinet Grotesk' for all headings to give a premium, established corporate look.",
+      "Use 'Satoshi' for body text and dashboard UI for excellent legibility.",
+      "For numbers, stats, and pricing tiers, ensure tabular numerals are used so they align perfectly.",
+      "Heading weights should be Medium (500) to Bold (700).",
+      "Body text should be 16px (text-base) with generous line height (leading-relaxed).",
+      "Small labels (e.g., tooth numbers, status badges) should use uppercase with wide tracking (tracking-wider, text-xs)."
+    ]
+  },
+  "layout_and_spacing": {
+    "container_spacing": "Generous spacing. Use p-6, p-8, p-12 for main sections. Avoid cramped dashboard layouts.",
+    "card_style": "Porcelain White (#FFFFFF) cards with rounded-xl or rounded-2xl corners, placed on Warm Ivory (#F8F5F0) background.",
+    "shadows": "Subtle, soft shadows. Use shadow-sm for default cards. For hover states, use shadow-md with a slight upward translation (-translate-y-1).",
+    "mobile_first": "Start with single-column layouts. Ensure the FDI tooth chart is easily tappable on mobile (touch targets >= 44px).",
+    "dashboard_grid": "Use the 'Control Room' grid but with generous padding. Don't cram widgets. Rely on whitespace instead of harsh borders for separation."
+  },
+  "component_guidelines": {
+    "buttons": {
+      "primary": "Background #B82024, text white. Subtle gold accent (e.g., gold icon or a thin gold bottom border/shadow). Rounded-full or rounded-xl.",
+      "secondary": "Outline button. Border #7A6F6A, text #2B2B2B. Hover state changes background to ivory (#F8F5F0).",
+      "cta": "Must include data-testid. E.g., data-testid='place-order-button'"
+    },
+    "badges_and_status": {
+      "premium_nudge": "Background #C9A45C/10, text #C9A45C, border border-[#C9A45C]/20. Use for 'Add 1 more unit to save' banners.",
+      "status_pills": "Rounded-full, px-3 py-1, text-xs, font-medium, uppercase, tracking-wider. Map status to colors (e.g., Completed = Gold background, In Progress = Taupe, New = Red)."
+    },
+    "tooth_chart": {
+      "interaction": "Visual 4-quadrant FDI chart. Tappable SVG zones. Selected teeth highlighted in Primary Red (#B82024). Unselected teeth outlined in Muted Taupe Grey.",
+      "mobile": "Ensure quadrant sections stack logically or are legible on mobile."
+    },
+    "forms": {
+      "inputs": "Solid #FFFFFF background, rounded-lg, 1px border of #7A6F6A/30. Focus ring in Primary Red (#B82024).",
+      "labels": "Muted Taupe Grey (#7A6F6A), text-sm, mb-1."
+    }
+  },
+  "media_assets": {
+    "logo": {
+      "url": "https://customer-assets.emergentagent.com/job_3147c62a-2b30-4c49-a67d-6d5a71dfc726/artifacts/b9orur0u_Shree%20Dental%20Lab.png",
+      "description": "Shree Dental Lab Logo (white/red on dark bg). Best used in the Charcoal Black header.",
+      "placement": "header, footer"
+    },
+    "hero_backgrounds": [
+      {
+        "url": "https://images.unsplash.com/photo-1579165466991-467135ad3110?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzOTB8MHwxfHNlYXJjaHwxfHxkZW50YWwlMjBsYWIlMjBwcm9mZXNzaW9uYWx8ZW58MHx8fHwxNzgxMTc2ODI5fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Dental lab professional holding tube. Use with a #111111 overlay for the homepage hero.",
+        "placement": "marketing_hero"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1575278616937-d474f5fda9a6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzOTB8MHwxfHNlYXJjaHwzfHxkZW50YWwlMjBsYWIlMjBwcm9mZXNzaW9uYWx8ZW58MHx8fHwxNzgxMTc2ODI5fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Dental lab machine operation. Good for 'About' or 'Production' sections.",
+        "placement": "about_section"
+      }
+    ],
+    "portraits": [
+      {
+        "url": "https://images.unsplash.com/photo-1667133295308-9ef24f71952e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODd8MHwxfHNlYXJjaHwxfHxkZW50aXN0JTIwcG9ydHJhaXR8ZW58MHx8fHwxNzgxMTc2ODI5fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Dentist smiling.",
+        "placement": "testimonials"
+      },
+      {
+        "url": "https://images.pexels.com/photos/17792882/pexels-photo-17792882.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Confident male dentist in dental office.",
+        "placement": "dentist_portal_welcome"
+      }
+    ],
+    "products": [
+      {
+        "url": "https://images.unsplash.com/photo-1677026010083-78ec7f1b84ed?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwyfHxkZW50YWwlMjBjcm93bnN8ZW58MHx8fHwxNzgxMTc2ODQ1fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Close up of perfect white teeth (Zirconia Crown proxy).",
+        "placement": "services_zirconia"
+      }
+    ]
+  },
+  "interactions_and_animations": {
+    "hover_states": "Cards should lift slightly (-translate-y-1) with a softer, larger shadow. Buttons should slightly brighten or increase contrast.",
+    "transitions": "Use 'transition-all duration-300 ease-in-out' for smooth micro-interactions.",
+    "loading": "Use a Champagne Gold or Primary Red spinner. Avoid generic blue spinners."
+  },
+  "testing_attributes": {
+    "rules": "All interactive elements (buttons, links, form inputs) and key data points (lifetime savings, prices) must include a 'data-testid' attribute in kebab-case format reflecting their role. e.g. data-testid='dentist-login-submit', data-testid='fdi-tooth-14'."
+  },
+  "instructions_to_main_agent": [
+    "Use Tailwind CSS for styling.",
+    "Add fontshare import to index.css and configure tailwind.config.js to use Cabinet Grotesk for sans/heading and Satoshi for sans/body.",
+    "Do not use generic blue anywhere in the application. Stick strictly to the defined color_system using arbitrary values like bg-[#B82024] or configure them in tailwind.config.js.",
+    "Build the dashboard components using Shadcn UI but heavily customized to fit the premium, rounded-card (rounded-2xl), Warm Ivory background aesthetic.",
+    "Implement the FDI tooth chart as a fully interactive SVG where clicking a tooth path highlights it in Primary Red (#B82024).",
+    "Ensure all dashboard pages are mobile-first, using stacking or horizontal scrolling for wide tables.",
+    "Include the logo in the Charcoal Black (#111111) header with proper padding."
+  ]
+}
