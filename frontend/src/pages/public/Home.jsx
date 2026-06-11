@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PublicLayout } from "@/components/Layout";
 import { RollButton } from "@/components/RollButton";
-import { Link2, CheckCircle2 } from "lucide-react";
+import { Link2 } from "lucide-react";
 
 const IMG = {
   hero: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?crop=entropy&cs=srgb&fm=jpg&q=85&w=1400",
@@ -11,9 +11,6 @@ const IMG = {
   crown: "https://images.unsplash.com/photo-1677026010083-78ec7f1b84ed?crop=entropy&cs=srgb&fm=jpg&q=85&w=900",
   bridge: "https://images.unsplash.com/photo-1575278616937-d474f5fda9a6?crop=entropy&cs=srgb&fm=jpg&q=85&w=900",
 };
-
-const Starburst = null;
-
 
 const services = [
   { title: "Zirconia Crown", img: IMG.crown, square: false, desc: "Monolithic & layered zirconia crowns — exceptional strength with lifelike translucency for any tooth." },
@@ -67,15 +64,15 @@ export default function Home() {
           </h2>
 
           {/* desktop */}
-          <div className="hidden grid-cols-[26%_1fr_48%] items-end gap-6 px-12 lg:grid xl:gap-8">
-            <img src={IMG.small} alt="zirconia detail" className="aspect-[438/346] w-full self-end rounded-2xl object-cover" />
-            <div className="flex flex-col items-start justify-end self-start">
+          <div className="hidden items-center gap-8 px-12 lg:grid lg:grid-cols-12">
+            <img src={IMG.small} alt="zirconia detail" className="col-span-3 aspect-[3/4] w-full rounded-2xl object-cover" />
+            <div className="col-span-5 flex flex-col items-start px-2">
               <p className="text-[16px] font-medium leading-[1.65] text-brand-graphite">
-                Through digital design, precision milling and<br />meticulous finishing, we help dentists deliver<br />beautiful, durable zirconia restorations — case<br />after case, on reliable timelines.
+                Through digital design, precision milling and meticulous finishing, we help dentists deliver beautiful, durable zirconia restorations — case after case, on reliable timelines.
               </p>
               <RollButton to="/about" label="About our studio" variant="red" className="mt-7" />
             </div>
-            <img src={IMG.large} alt="dental lab" className="aspect-[3/2] w-full self-end rounded-2xl object-cover" />
+            <img src={IMG.large} alt="dental lab" className="col-span-4 aspect-[4/5] w-full rounded-2xl object-cover" />
           </div>
 
           {/* mobile/tablet */}
@@ -84,9 +81,9 @@ export default function Home() {
               Through digital design, precision milling and meticulous finishing, we help dentists deliver beautiful, durable zirconia restorations — case after case, on reliable timelines.
             </p>
             <RollButton to="/about" label="About our studio" variant="red" className="mt-6" />
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:gap-5">
-              <img src={IMG.small} alt="" className="aspect-[438/346] rounded-xl object-cover sm:w-[45%] sm:rounded-2xl" />
-              <img src={IMG.large} alt="" className="aspect-[900/600] rounded-xl object-cover sm:w-[55%] sm:rounded-2xl" />
+            <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-5">
+              <img src={IMG.small} alt="" className="aspect-[4/3] w-full rounded-xl object-cover sm:rounded-2xl" />
+              <img src={IMG.large} alt="" className="aspect-[4/3] w-full rounded-xl object-cover sm:rounded-2xl" />
             </div>
           </div>
         </div>
@@ -120,8 +117,15 @@ export default function Home() {
             ))}
           </div>
 
-          {/* process + CTA */}
-          <div className="mt-16 grid gap-8 px-5 sm:px-8 md:grid-cols-3 lg:px-12">
+          {/* process */}
+          <div className="mb-6 mt-20 flex items-center gap-3 px-5 sm:px-8 lg:px-12">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-charcoal text-[11px] font-semibold text-white sm:h-7 sm:w-7 sm:text-xs">3</span>
+            <span className="rounded-full border border-brand-taupe/40 px-3 py-1 text-xs font-medium text-brand-graphite sm:px-4 sm:py-1.5 sm:text-[13px]">How it works</span>
+          </div>
+          <h2 className="font-clamp-h2 mb-12 px-5 font-heading font-medium leading-[1.12] tracking-[-0.02em] text-brand-graphite sm:px-8 lg:px-12">
+            From scan to seat in three simple steps
+          </h2>
+          <div className="grid gap-8 px-5 sm:px-8 md:grid-cols-3 lg:px-12">
             {[["Place & upload", "Create patients, tap teeth on the FDI chart, set shades, upload scans or ship impressions."],
               ["We manufacture", "Design, milling, sintering and glazing — with live status and WhatsApp updates."],
               ["Dispatch & deliver", "Track courier, download GST invoices and receive your fitted restorations."]].map(([t, d], i) => (
@@ -143,11 +147,6 @@ export default function Home() {
           <RollButton to="/register" label="Register your clinic" variant="red" />
           <RollButton to="/login" label="Dentist Login" variant="white" />
         </div>
-        <ul className="mx-auto mt-10 flex max-w-3xl flex-wrap justify-center gap-x-8 gap-y-3 px-6 text-sm text-white/70">
-          {["Per-tooth shade selection", "Volume slab pricing", "GST invoices & 4×6 labels", "WhatsApp case updates"].map((t) => (
-            <li key={t} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-brand-gold" />{t}</li>
-          ))}
-        </ul>
       </section>
     </PublicLayout>
   );
