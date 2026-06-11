@@ -7,7 +7,7 @@ const IMG = "https://images.unsplash.com/photo-1575278616937-d474f5fda9a6?crop=e
 export default function About() {
   return (
     <PublicLayout>
-      <section className="bg-brand-charcoal py-16 text-white">
+      <section className="bg-brand-charcoal pt-28 pb-16 text-white sm:pt-32">
         <div className="mx-auto max-w-7xl px-6">
           <h1 className="font-heading text-4xl font-bold sm:text-5xl">About Shree Dental Lab</h1>
           <p className="mt-4 max-w-2xl text-white/75">A precision-driven dental laboratory specialising in zirconia crowns, bridges and implant restorations for dental professionals.</p>

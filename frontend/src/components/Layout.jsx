@@ -3,9 +3,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import api, { LOGO_MARK as LOGO } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { RollButton } from "@/components/RollButton";
 import {
   LayoutDashboard, PlusCircle, Package, Users, Tag, FileText, User, Boxes,
-  KanbanSquare, Stethoscope, MessageSquare, BarChart3, Settings, LogOut, Menu, X, Bell, Palette,
+  KanbanSquare, Stethoscope, MessageSquare, BarChart3, Settings, LogOut, Menu, X, Bell, Palette, Clock,
 } from "lucide-react";
 
 const NAV = {
@@ -137,42 +138,79 @@ export function PortalShell({ children }) {
   );
 }
 
+function useLondonClock() {
+  const [t, setT] = useState("");
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" });
+      setT(now);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return t;
+}
+
 export function PublicNav() {
   const [open, setOpen] = useState(false);
+  const time = useLondonClock();
   const links = [
     { to: "/", label: "Home" },
-    { to: "/about", label: "About" },
+    { to: "/about", label: "Studio" },
     { to: "/products", label: "Products" },
-    { to: "/zirconia", label: "Zirconia C&B" },
-    { to: "/contact", label: "Contact" },
+    { to: "/zirconia", label: "Zirconia" },
+    { to: "/contact", label: "Connect" },
   ];
   return (
-    <header className="sticky top-0 z-40 bg-brand-charcoal text-white">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link to="/" className="flex items-center gap-3" data-testid="logo-link">
-          <img src={LOGO} alt="Shree Dental Lab" className="h-11 w-11 rounded-md object-cover" />
-          <div className="leading-tight">
-            <p className="font-heading text-base font-bold">Shree Dental Lab</p>
-            <p className="text-[10px] uppercase tracking-widest text-brand-gold">Precision · Quality · Trust</p>
+    <header className="absolute inset-x-0 top-0 z-30">
+      <div className="mx-auto max-w-[1440px] p-2 sm:p-3">
+        <nav className="flex items-center justify-between rounded-full bg-white/95 p-[5px] pl-[5px] shadow-[0_4px_24px_rgba(17,17,17,0.08)] backdrop-blur">
+          {/* Left */}
+          <div className="flex items-center gap-5">
+            <Link to="/" data-testid="logo-link" className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-brand-charcoal sm:h-10 sm:w-10">
+                <img src={LOGO} alt="SDL" className="h-full w-full object-cover" />
+              </span>
+              <span className="hidden font-heading text-sm font-bold tracking-tight text-brand-graphite sm:block">Shree Dental Lab</span>
+            </Link>
+            <div className="hidden items-center gap-6 md:flex">
+              {links.map((l) => (
+                <Link key={l.to} to={l.to} className="text-sm text-brand-graphite transition-colors duration-300 hover:text-brand-taupe">{l.label}</Link>
+              ))}
+            </div>
           </div>
-        </Link>
-        <nav className="hidden items-center gap-7 md:flex">
-          {links.map((l) => (
-            <Link key={l.to} to={l.to} className="text-sm font-medium text-white/80 transition hover:text-brand-gold">{l.label}</Link>
-          ))}
+          {/* Right */}
+          <div className="hidden items-center gap-4 md:flex">
+            <span className="hidden text-[13px] text-brand-taupe lg:block">Accepting new clinics for 2026</span>
+            <span className="flex items-center gap-1.5 text-[13px] text-brand-taupe"><Clock className="h-3.5 w-3.5" />{time} IST</span>
+            <RollButton to="/login" label="Dentist Login" variant="dark" dataTestid="nav-login-btn" />
+          </div>
+          {/* Mobile toggle */}
+          <button onClick={() => setOpen(true)} className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-charcoal text-white md:hidden" aria-label="Menu">
+            <Menu className="h-5 w-5" />
+          </button>
         </nav>
-        <div className="hidden items-center gap-3 md:flex">
-          <Link to="/login" data-testid="nav-login-btn" className="rounded-full border border-white/30 px-4 py-2 text-sm font-semibold hover:border-brand-gold hover:text-brand-gold">Dentist Login</Link>
-          <Link to="/register" data-testid="nav-register-btn" className="rounded-full bg-brand-red px-4 py-2 text-sm font-semibold transition hover:bg-brand-ruby">Register</Link>
-        </div>
-        <button className="md:hidden" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
       </div>
+
+      {/* Mobile bottom sheet */}
       {open && (
-        <div className="space-y-1 border-t border-white/10 px-4 pb-4 md:hidden">
-          {links.map((l) => <Link key={l.to} to={l.to} onClick={() => setOpen(false)} className="block py-2 text-sm">{l.label}</Link>)}
-          <div className="flex gap-2 pt-2">
-            <Link to="/login" className="flex-1 rounded-full border border-white/30 py-2 text-center text-sm">Login</Link>
-            <Link to="/register" className="flex-1 rounded-full bg-brand-red py-2 text-center text-sm">Register</Link>
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
+          <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-white p-6">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-[13px] text-brand-taupe"><Clock className="h-3.5 w-3.5" />{time} IST</span>
+              <button onClick={() => setOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-charcoal text-white"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="mt-6 space-y-3">
+              {links.map((l) => (
+                <Link key={l.to} to={l.to} onClick={() => setOpen(false)} className="block font-heading text-[28px] font-medium leading-8 text-brand-graphite">{l.label}</Link>
+              ))}
+            </div>
+            <div className="mt-6 flex flex-col gap-3">
+              <RollButton to="/login" label="Dentist Login" variant="dark" />
+              <RollButton to="/register" label="Register your clinic" variant="red" />
+            </div>
           </div>
         </div>
       )}
@@ -215,7 +253,7 @@ export function Footer() {
 
 export function PublicLayout({ children }) {
   return (
-    <div className="min-h-screen bg-brand-ivory">
+    <div className="relative min-h-screen bg-brand-ivory">
       <PublicNav />
       {children}
       <Footer />

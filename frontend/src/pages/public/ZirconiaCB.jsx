@@ -7,7 +7,7 @@ const IMG = "https://images.unsplash.com/photo-1677026010083-78ec7f1b84ed?crop=e
 export default function ZirconiaCB() {
   return (
     <PublicLayout>
-      <section className="bg-brand-charcoal py-16 text-white">
+      <section className="bg-brand-charcoal pt-28 pb-16 text-white sm:pt-32">
         <div className="mx-auto max-w-7xl px-6">
           <h1 className="font-heading text-4xl font-bold sm:text-5xl">Zirconia Crown & Bridge</h1>
           <p className="mt-4 max-w-2xl text-white/75">Strength meets aesthetics. Choose the right tier for every case.</p>
