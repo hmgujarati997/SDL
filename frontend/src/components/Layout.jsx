@@ -157,10 +157,10 @@ export function PublicNav() {
   const time = useLondonClock();
   const links = [
     { to: "/", label: "Home" },
-    { to: "/about", label: "Studio" },
+    { to: "/about", label: "About" },
     { to: "/products", label: "Products" },
     { to: "/zirconia", label: "Zirconia" },
-    { to: "/contact", label: "Connect" },
+    { to: "/contact", label: "Contact" },
   ];
   return (
     <header className="absolute inset-x-0 top-0 z-30">

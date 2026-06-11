@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PublicLayout } from "@/components/Layout";
 import { RollButton } from "@/components/RollButton";
-import { Link2, CheckCircle2, ArrowRight } from "lucide-react";
+import { Link2, CheckCircle2 } from "lucide-react";
 
 const IMG = {
   hero: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?crop=entropy&cs=srgb&fm=jpg&q=85&w=1400",
@@ -12,11 +12,8 @@ const IMG = {
   bridge: "https://images.unsplash.com/photo-1575278616937-d474f5fda9a6?crop=entropy&cs=srgb&fm=jpg&q=85&w=900",
 };
 
-const Starburst = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" {...props}>
-    <path d="m19.6 66.5 19.7-11 .3-1-.3-.5h-1l-3.3-.2-11.2-.3L14 53l-9.5-.5-2.4-.5L0 49l.2-1.5 2-1.3 2.9.2 6.3.5 9.5.6 6.9.4L38 49.1h1.6l.2-.7-.5-.4-.4-.4L29 41l-10.6-7-5.6-4.1-3-2-1.5-2-.6-4.2 2.7-3 3.7.3.9.2 3.7 2.9 8 6.1L37 36l1.5 1.2.6-.4.1-.3-.7-1.1L33 25l-6-10.4-2.7-4.3-.7-2.6c-.3-1-.4-2-.4-3l3-4.2L28 0l4.2.6L33.8 2l2.6 6 4.1 9.3L47 29.9l2 3.8 1 3.4.3 1h.7v-.5l.5-7.2 1-8.7 1-11.2.3-3.2 1.6-3.8 3-2L61 2.6l2 2.9-.3 1.8-1.1 7.7L59 27.1l-1.5 8.2h.9l1-1.1 4.1-5.4 6.9-8.6 3-3.5L77 13l2.3-1.8h4.3l3.1 4.7-1.4 4.9-4.4 5.6-3.7 4.7-5.3 7.1-3.2 5.7.3.4h.7l12-2.6 6.4-1.1 7.6-1.3 3.5 1.6.4 1.6-1.4 3.4-8.2 2-9.6 2-14.3 3.3-.2.1.2.3 6.4.6 2.8.2h6.8l12.6 1 3.3 2 1.9 2.7-.3 2-5.1 2.6-6.8-1.6-16-3.8-5.4-1.3h-.8v.4l4.6 4.5 8.3 7.5L89 80.1l.5 2.4-1.3 2-1.4-.2-9.2-7-3.6-3-8-6.8h-.5v.7l1.8 2.7 9.8 14.7.5 4.5-.7 1.4-2.6 1-2.7-.6-5.8-8-6-9-4.7-8.2-.5.4-2.9 30.2-1.3 1.5-3 1.2-2.5-2-1.4-3 1.4-6.2 1.6-8 1.3-6.4 1.2-7.9.7-2.6v-.2H49L43 72l-9 12.3-7.2 7.6-1.7.7-3-1.5.3-2.8L24 86l10-12.8 6-7.9 4-4.6-.1-.5h-.3L17.2 77.4l-4.7.6-2-2 .2-3 1-1 8-5.5Z" />
-  </svg>
-);
+const Starburst = null;
+
 
 const services = [
   { title: "Zirconia Crown", img: IMG.crown, square: false, desc: "Monolithic & layered zirconia crowns — exceptional strength with lifelike translucency for any tooth." },
@@ -52,11 +49,7 @@ export default function Home() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.25 }}
             className="mt-8 flex flex-col gap-4 sm:mt-12 sm:flex-row sm:items-center sm:gap-5">
             <RollButton to="/register" label="Place New Order" variant="red" dataTestid="hero-place-order-btn" />
-            <div className="inline-flex items-center gap-2.5 rounded-[8px] bg-white px-4 py-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
-              <Starburst className="h-5 w-5 fill-current text-brand-red sm:h-6 sm:w-6" />
-              <span className="text-[13px] font-medium text-brand-graphite sm:text-sm">ISO-grade Certified Lab</span>
-              <span className="rounded bg-brand-charcoal px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white sm:px-2 sm:text-[11px]">Trusted</span>
-            </div>
+            <RollButton to="/login" label="Dentist Login" variant="white" dataTestid="hero-login-btn" />
           </motion.div>
         </div>
       </section>
