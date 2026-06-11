@@ -81,7 +81,7 @@ export default function Home() {
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-charcoal text-brand-gold">
                   <s.icon className="h-7 w-7" />
                 </div>
-                <span className="mx-auto mt-3 flex h-9 w-9 items-center justify-center rounded-full bg-brand-gold/15 font-heading text-lg font-bold text-brand-red">{i + 1}</span>
+                <span className="mx-auto mt-4 flex h-11 w-11 items-center justify-center rounded-full bg-brand-red font-heading text-xl font-bold text-white shadow-md ring-4 ring-brand-red/15">{i + 1}</span>
                 <h3 className="font-heading text-xl font-bold">{s.title}</h3>
                 <p className="mx-auto mt-2 max-w-xs text-sm text-brand-taupe">{s.desc}</p>
               </div>
