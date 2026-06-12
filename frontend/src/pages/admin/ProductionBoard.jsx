@@ -4,7 +4,7 @@ import api, { inr, fmtDate } from "@/lib/api";
 import { PageHeader } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 
-const COLS = ["Order Received", "Order Accepted", "Sent to Designer", "Design Received", "Cutting Started", "Sintering Started", "Glazing Started", "QC Done / Ready for Packaging", "Packed / Dispatch Label Printed", "Dispatched", "Delivered", "On Hold"];
+const COLS = ["Order Received", "Order Accepted", "Sent to Designer", "Design Received", "Cutting Started", "Sintering Started", "Glazing Started", "QC Done / Ready for Packaging", "Packed / Dispatch Label Printed", "Dispatched", "On Hold"];
 
 export default function ProductionBoard() {
   const [orders, setOrders] = useState(null);
