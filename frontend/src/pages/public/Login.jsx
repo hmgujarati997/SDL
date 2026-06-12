@@ -40,7 +40,6 @@ export default function Login() {
             <span className="font-heading font-bold">Shree Dental Lab</span>
           </Link>
           <h2 className="font-heading text-2xl font-bold">Login to your portal</h2>
-          <p className="mt-1 text-sm text-brand-taupe">Dentist, admin, designer & team access.</p>
           <label className="mb-1 mt-6 block text-sm text-brand-taupe">Email</label>
           <input data-testid="login-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-lg border border-brand-taupe/30 px-3 py-2.5 outline-none focus:border-brand-red" />
