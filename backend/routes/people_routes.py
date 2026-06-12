@@ -169,6 +169,24 @@ async def update_user(uid: str, body: dict = Body(...), user: dict = Depends(req
     return {"ok": True}
 
 
+@router.delete("/users/{uid}")
+async def delete_user(uid: str, user: dict = Depends(require_roles("admin"))):
+    if uid == user["id"]:
+        raise HTTPException(400, "You cannot delete your own account.")
+    target = await db.users.find_one({"id": uid}, {"_id": 0})
+    if not target:
+        raise HTTPException(404, "Team member not found")
+    if target.get("role") not in ("admin", "employee", "designer"):
+        raise HTTPException(400, "Only team members can be deleted here.")
+    if target.get("role") == "admin":
+        admin_count = await db.users.count_documents({"role": "admin"})
+        if admin_count <= 1:
+            raise HTTPException(400, "Cannot delete the last admin account.")
+    await db.users.delete_one({"id": uid})
+    await db.notifications.delete_many({"user_id": uid})
+    return {"ok": True, "deleted": target.get("name")}
+
+
 # ---------- Notifications ----------
 @router.get("/notifications")
 async def my_notifications(user: dict = Depends(get_current_user)):
