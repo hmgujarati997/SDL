@@ -45,9 +45,14 @@ export default function Home() {
             <span className="sm:hidden"> </span>who demand a perfect fit.
           </motion.h1>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.25 }}
-            className="mt-8 flex flex-col gap-4 sm:mt-12 sm:flex-row sm:items-center sm:gap-5">
-            <RollButton to="/register" label="Place New Order" variant="red" dataTestid="hero-place-order-btn" />
-            <RollButton to="/login" label="Dentist Login" variant="white" dataTestid="hero-login-btn" />
+            className="mt-8 sm:mt-12">
+            <p className="mb-5 max-w-xl text-base font-medium leading-relaxed text-brand-graphite sm:text-lg">
+              New here? Tap <span className="font-bold text-brand-red">Place New Order</span> to register your clinic and send your first case. Already with us? Use <span className="font-bold text-brand-graphite">Dentist Login</span>.
+            </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+              <RollButton to="/register" label="Place New Order" variant="red" size="lg" dataTestid="hero-place-order-btn" />
+              <RollButton to="/login" label="Dentist Login" variant="white" size="lg" dataTestid="hero-login-btn" />
+            </div>
           </motion.div>
         </div>
       </section>
@@ -129,9 +134,9 @@ export default function Home() {
               ["We manufacture", "Design, milling, sintering and glazing — with live status and WhatsApp updates."],
               ["Dispatch & deliver", "Track courier, download GST invoices and receive your fitted restorations."]].map(([t, d], i) => (
               <div key={t}>
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-red font-heading text-xl font-bold text-white shadow-md ring-4 ring-brand-red/15">{i + 1}</span>
-                <h3 className="mt-5 font-heading text-xl font-bold text-brand-graphite">{t}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-brand-taupe">{d}</p>
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-red font-heading text-2xl font-bold text-white shadow-md ring-4 ring-brand-red/15">{i + 1}</span>
+                <h3 className="mt-5 font-heading text-2xl font-bold text-brand-graphite">{t}</h3>
+                <p className="mt-3 text-base leading-relaxed text-brand-graphite/80">{d}</p>
               </div>
             ))}
           </div>
@@ -139,12 +144,12 @@ export default function Home() {
       </section>
 
       {/* CTA band */}
-      <section className="bg-brand-charcoal py-16 text-center text-white">
-        <h2 className="font-heading text-3xl font-bold sm:text-4xl">Ready to place your first case?</h2>
-        <p className="mt-3 text-white/70">See live volume pricing, upload scans and track every stage.</p>
-        <div className="mt-7 flex justify-center gap-3">
-          <RollButton to="/register" label="Register your clinic" variant="red" />
-          <RollButton to="/login" label="Dentist Login" variant="white" />
+      <section className="bg-brand-charcoal py-16 text-center text-white sm:py-20">
+        <h2 className="font-heading text-3xl font-bold sm:text-4xl lg:text-5xl">Ready to place your first case?</h2>
+        <p className="mx-auto mt-4 max-w-xl px-5 text-base text-white/75 sm:text-lg">See live volume pricing, upload your scans and track every stage — start in under two minutes.</p>
+        <div className="mt-8 flex flex-col items-center justify-center gap-4 px-5 sm:flex-row sm:gap-5">
+          <RollButton to="/register" label="Register your clinic" variant="red" size="lg" dataTestid="cta-register-btn" />
+          <RollButton to="/login" label="Dentist Login" variant="white" size="lg" dataTestid="cta-login-btn" />
         </div>
       </section>
     </PublicLayout>

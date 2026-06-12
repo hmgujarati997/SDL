@@ -172,7 +172,7 @@ export function PublicNav() {
             </Link>
             <div className="hidden items-center gap-6 md:flex">
               {links.map((l) => (
-                <Link key={l.to} to={l.to} className="text-sm text-brand-graphite transition-colors duration-300 hover:text-brand-taupe">{l.label}</Link>
+                <Link key={l.to} to={l.to} className="text-base font-medium text-brand-graphite transition-colors duration-300 hover:text-brand-taupe">{l.label}</Link>
               ))}
             </div>
           </div>
