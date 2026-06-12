@@ -103,6 +103,38 @@ async def set_dentist_status(did: str, body: dict = Body(...), user: dict = Depe
     return {"ok": True}
 
 
+@router.delete("/dentists/{did}")
+async def delete_dentist(did: str, user: dict = Depends(require_roles("admin"))):
+    dent = await db.dentists.find_one({"id": did}, {"_id": 0})
+    if not dent:
+        raise HTTPException(404, "Dentist not found")
+    user_id = dent.get("user_id")
+    batches = await db.order_batches.find({"dentist_id": did}, {"id": 1, "_id": 0}).to_list(5000)
+    batch_ids = [b["id"] for b in batches]
+
+    if batch_ids:
+        await db.order_cases.delete_many({"batch_id": {"$in": batch_ids}})
+        await db.order_items.delete_many({"batch_id": {"$in": batch_ids}})
+        await db.order_files.delete_many({"batch_id": {"$in": batch_ids}})
+        await db.order_activity_logs.delete_many({"batch_id": {"$in": batch_ids}})
+        await db.order_status_history.delete_many({"batch_id": {"$in": batch_ids}})
+        await db.payments.delete_many({"batch_id": {"$in": batch_ids}})
+        await db.remake_requests.delete_many({"batch_id": {"$in": batch_ids}})
+        await db.dispatch_details.delete_many({"batch_id": {"$in": batch_ids}})
+        await db.impression_shipments.delete_many({"batch_id": {"$in": batch_ids}})
+
+    await db.order_batches.delete_many({"dentist_id": did})
+    await db.invoices.delete_many({"dentist_id": did})
+    await db.patients.delete_many({"dentist_id": did})
+    await db.dentist_product_pricing.delete_many({"dentist_id": did})
+    await db.pickup_requests.delete_many({"dentist_id": did})
+    await db.dentists.delete_one({"id": did})
+    if user_id:
+        await db.users.delete_one({"id": user_id})
+        await db.notifications.delete_many({"user_id": user_id})
+    return {"ok": True, "deleted": dent.get("name")}
+
+
 # ---------- Admin: users (employee/designer/admin) ----------
 @router.get("/users")
 async def list_users(role: Optional[str] = None, user: dict = Depends(require_roles("admin"))):

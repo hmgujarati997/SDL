@@ -3,7 +3,7 @@ import api, { fmtDate, formatApiError } from "@/lib/api";
 import { PageHeader, Card, Btn } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, Trash2, AlertTriangle, X } from "lucide-react";
 
 export default function Dentists() {
   const [list, setList] = useState(null);
@@ -15,6 +15,8 @@ export default function Dentists() {
   useEffect(() => { api.get("/products").then(({ data }) => { const t = []; data.forEach((p) => p.tiers.forEach((x) => t.push({ ...x, product_name: p.name }))); setTiers(t); }); }, []);
 
   if (!list) return <Spinner />;
+
+  const onDeleted = (id) => { setList((prev) => prev.filter((x) => x.id !== id)); setOpenId(null); };
 
   const term = q.trim().toLowerCase();
   const filtered = term
@@ -48,7 +50,7 @@ export default function Dentists() {
                 {openId === d.id ? <>Hide details <ChevronUp className="h-4 w-4" /></> : <>View details <ChevronDown className="h-4 w-4" /></>}
               </span>
             </button>
-            {openId === d.id && <DentistDetail dentist={d} tiers={tiers} />}
+            {openId === d.id && <DentistDetail dentist={d} tiers={tiers} onDeleted={onDeleted} />}
           </Card>
         ))}
       </div>
@@ -65,8 +67,9 @@ function Field({ label, value }) {
   );
 }
 
-function DentistDetail({ dentist, tiers }) {
+function DentistDetail({ dentist, tiers, onDeleted }) {
   const d = dentist;
+  const [confirmOpen, setConfirmOpen] = useState(false);
   return (
     <div className="mt-4 space-y-5 border-t border-brand-taupe/15 pt-4">
       <div>
@@ -97,6 +100,67 @@ function DentistDetail({ dentist, tiers }) {
       </div>
 
       <PricingEditor dentistId={d.id} tiers={tiers} />
+
+      <div className="flex items-center justify-between rounded-xl border border-brand-red/25 bg-brand-red/5 p-4">
+        <div>
+          <p className="text-sm font-semibold text-brand-red">Delete this dentist</p>
+          <p className="text-xs text-brand-taupe">Permanently removes the clinic, its login, patients, orders and invoices.</p>
+        </div>
+        <Btn variant="outline" data-testid={`delete-dentist-${d.id}`} className="border-brand-red text-brand-red hover:bg-brand-red hover:text-white" onClick={() => setConfirmOpen(true)}>
+          <Trash2 className="h-4 w-4" /> Delete
+        </Btn>
+      </div>
+
+      {confirmOpen && <DeleteDialog dentist={d} onClose={() => setConfirmOpen(false)} onDeleted={onDeleted} />}
+    </div>
+  );
+}
+
+function DeleteDialog({ dentist, onClose, onDeleted }) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const match = text.trim() === dentist.name.trim();
+
+  const doDelete = async () => {
+    if (!match) return;
+    setBusy(true);
+    try {
+      await api.delete(`/dentists/${dentist.id}`);
+      toast.success(`${dentist.name} deleted`);
+      onDeleted(dentist.id);
+    } catch (e) {
+      toast.error(formatApiError(e.response?.data?.detail));
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div data-testid="delete-dentist-dialog" className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <button onClick={onClose} className="absolute right-4 top-4 text-brand-taupe hover:text-brand-graphite"><X className="h-5 w-5" /></button>
+        <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-brand-red/10">
+          <AlertTriangle className="h-5 w-5 text-brand-red" />
+        </div>
+        <h3 className="font-heading text-lg font-bold text-brand-graphite">Are you sure?</h3>
+        <p className="mt-1 text-sm text-brand-taupe">
+          This permanently deletes <b className="text-brand-graphite">{dentist.name}</b> along with their login, patients, orders and invoices. This cannot be undone.
+        </p>
+        <p className="mt-4 text-sm text-brand-graphite">
+          Type <span className="rounded bg-brand-ivory px-1.5 py-0.5 font-mono font-semibold text-brand-red">{dentist.name}</span> to confirm:
+        </p>
+        <input data-testid="delete-confirm-input" autoFocus value={text} onChange={(e) => setText(e.target.value)}
+          placeholder={dentist.name}
+          className="mt-2 w-full rounded-lg border border-brand-taupe/30 px-3 py-2 text-sm focus:border-brand-red focus:outline-none" />
+        <div className="mt-5 flex justify-end gap-2">
+          <Btn variant="ghost" onClick={onClose}>Cancel</Btn>
+          <Btn data-testid="delete-confirm-btn" disabled={!match || busy}
+            className={`bg-brand-red text-white hover:bg-brand-ruby ${(!match || busy) ? "cursor-not-allowed opacity-50" : ""}`}
+            onClick={doDelete}>
+            {busy ? "Deleting…" : "Delete dentist"}
+          </Btn>
+        </div>
+      </div>
     </div>
   );
 }
