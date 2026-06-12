@@ -11,7 +11,6 @@ export default function DentistDashboard() {
   const { user } = useAuth();
   const [d, setD] = useState(null);
   const billingDone = user?.dentist?.billing_complete;
-  const approved = user?.dentist?.status === "approved";
 
   useEffect(() => { api.get("/dentist/dashboard").then(({ data }) => setD(data)).catch(() => {}); }, []);
   if (!d) return <Spinner label="Loading dashboard..." />;
@@ -29,9 +28,6 @@ export default function DentistDashboard() {
           <AlertTriangle className="h-5 w-5 text-brand-gold" />
           <p className="text-sm text-brand-graphite">Complete your <Link to="/app/profile" className="font-semibold text-brand-red underline">billing profile</Link> to place paid orders.</p>
         </div>
-      )}
-      {!approved && (
-        <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">Your account is <b>{user?.dentist?.status}</b> — an admin will review it shortly.</div>
       )}
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">

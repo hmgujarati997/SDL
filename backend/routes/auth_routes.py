@@ -60,7 +60,7 @@ async def register(body: RegisterIn, response: Response):
         "billing_address": "", "clinic_address": "", "city": "", "state": "", "pincode": "",
         "gst_number": "", "pan_number": "", "delivery_address": "",
         "alt_contact_name": "", "alt_contact_number": "",
-        "status": "pending", "billing_complete": False, "lifetime_savings": 0, "created_at": now_iso(),
+        "status": "active", "billing_complete": False, "lifetime_savings": 0, "created_at": now_iso(),
     })
     token = create_access_token(uid, email, "dentist")
     _set_cookie(response, token)
