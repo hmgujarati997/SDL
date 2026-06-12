@@ -97,7 +97,7 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-5 px-5 sm:gap-6 sm:px-8 md:grid-cols-2 lg:gap-7 lg:px-12">
             {services.map((s) => (
               <div key={s.title}>
-                <Link to="/register" className={`group relative block overflow-hidden rounded-2xl bg-brand-charcoal ${s.square ? "aspect-square" : "aspect-[329/246]"}`}>
+                <Link to="/register" className="group relative block aspect-[4/3] overflow-hidden rounded-2xl bg-brand-charcoal">
                   <img src={s.img} alt={s.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute bottom-4 left-4 flex h-9 w-9 items-center overflow-hidden rounded-full bg-white transition-all duration-300 ease-in-out group-hover:w-[150px]">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center">
@@ -111,22 +111,26 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          {/* process */}
-          <div className="mb-6 mt-20 flex items-center gap-3 px-5 sm:px-8 lg:px-12">
+      {/* SECTION 4 — HOW TO ORDER (white) */}
+      <section className="bg-white py-16 sm:py-20 lg:py-28">
+        <div className="mx-auto max-w-[1440px]">
+          <div className="mb-6 flex items-center gap-3 px-5 sm:px-8 lg:px-12">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-charcoal text-[11px] font-semibold text-white sm:h-7 sm:w-7 sm:text-xs">3</span>
             <span className="rounded-full border border-brand-taupe/40 px-3 py-1 text-xs font-medium text-brand-graphite sm:px-4 sm:py-1.5 sm:text-[13px]">How to order</span>
           </div>
-          <h2 className="font-clamp-h2 mb-12 px-5 font-heading font-medium leading-[1.12] tracking-[-0.02em] text-brand-graphite sm:px-8 lg:px-12">
+          <h2 className="font-clamp-h2 mb-12 px-5 font-heading font-medium leading-[1.12] tracking-[-0.02em] text-brand-graphite sm:mb-16 sm:px-8 lg:px-12">
             Ordering made effortless — in three simple steps
           </h2>
-          <div className="grid gap-8 px-5 sm:px-8 md:grid-cols-3 lg:px-12">
-            {[["Place & upload", "Create patients, tap teeth on the FDI chart, set shades, upload scans or ship impressions."],
+          <div className="grid gap-10 px-5 sm:gap-8 sm:px-8 md:grid-cols-3 lg:gap-12 lg:px-12">
+            {[["Place & upload", "Create patients, tap teeth on the FDI chart, set shades, and upload scans or ship impressions."],
               ["We manufacture", "Design, milling, sintering and glazing — with live status and WhatsApp updates."],
               ["Dispatch & deliver", "Track courier, download GST invoices and receive your fitted restorations."]].map(([t, d], i) => (
               <div key={t}>
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-red font-heading text-xl font-bold text-white shadow-md ring-4 ring-brand-red/15">{i + 1}</span>
-                <h3 className="mt-4 font-heading text-xl font-bold text-brand-graphite">{t}</h3>
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-red font-heading text-xl font-bold text-white shadow-md ring-4 ring-brand-red/15">{i + 1}</span>
+                <h3 className="mt-5 font-heading text-xl font-bold text-brand-graphite">{t}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-brand-taupe">{d}</p>
               </div>
             ))}
