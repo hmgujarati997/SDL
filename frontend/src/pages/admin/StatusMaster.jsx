@@ -75,7 +75,7 @@ function StatusRow({ s, i, total, onPatch, onDelete, onMove }) {
         <button onClick={() => onMove(i, 1)} disabled={i === total - 1} className="text-brand-taupe hover:text-brand-red disabled:opacity-20"><ChevronDown className="h-4 w-4" /></button>
       </div>
 
-      <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wider ${colorClasses(s.color).badge}`}>{s.label}</span>
+      <span className={`h-3 w-3 shrink-0 rounded-full ${colorClasses(s.color).dot}`} />
 
       <div className="min-w-[180px] flex-1">
         {s.core ? (

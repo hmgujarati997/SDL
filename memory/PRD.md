@@ -55,3 +55,21 @@ Backend 23/23 pytest PASSED. No critical/UI bugs. Mock: Razorpay payments, Whats
 ## Still pending from user
 - Real Razorpay keys (Key ID + Secret) to switch off mock mode — user wants live, keys not yet provided.
 - About/Contact premium restyle (P1). WhatsApp live creds (P1).
+
+## Status Master (2026-06-12)
+- New admin "Statuses" tab in Settings (/app/settings). Global workflow. Manages order statuses:
+  add custom production stages, rename custom ones, recolor any (10-swatch palette), toggle
+  Production Board visibility, reorder (up/down), delete custom (blocked if in use).
+- CORE statuses (label-locked, cannot deactivate/delete; recolor/reorder/board-toggle allowed):
+  Impression Awaited/Received, In-House Scanning, Order Received, Order Accepted, Sent to Designer,
+  QC Done/Ready, Packed, Dispatched, Delivered, On Hold, Cancelled. Editable: Design Received,
+  Cutting/Sintering/Glazing, Trial stages, + any custom. This keeps dashboards/flow automation intact.
+- Backend: routes/status_routes.py (collection order_statuses, seeded 19 on first run via ensure_statuses).
+  /meta + order status-update now validate against the master. Renaming a custom status migrates
+  existing orders (order_batches/cases/items).
+- Frontend: lib/statusColors.js (PALETTE + cached useStatuses hook), StatusBadge & ProductionBoard
+  read colors/columns from the master. Board excludes Delivered/Cancelled by default (configurable).
+- WhatsApp simplified: messages sent ONLY on order received (order_placed/impression_placed) and
+  couriered (dispatched). All other status changes still create in-app notifications, no WhatsApp.
+- Verified: backend curl (CRUD + core protection + in-use delete block + invalid-status reject) and
+  testing_agent frontend 10/10 PASS (iteration_3.json).
