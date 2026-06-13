@@ -269,7 +269,7 @@ async def create_order(body: OrderIn, user: dict = Depends(require_roles("dentis
         "clinic_name": dent.get("clinic_name", ""), "status": status,
         "case_input_type": body.case_input_type, "urgency": body.urgency,
         "pickup_required": body.pickup_required, "delivery_required": body.delivery_required,
-        "delivery_address": body.delivery_address or dent.get("delivery_address", ""),
+        "delivery_address": dent.get("delivery_address") or dent.get("clinic_address") or dent.get("billing_address") or "",
         "notes": body.notes, "is_impression": is_impression, "pricing": quote,
         "amounts": {"total": total, "paid": total if paid_ok else 0, "pending": 0,
                     "status": "Paid" if paid_ok else "Unpaid"},
@@ -722,7 +722,7 @@ async def dispatch_label(bid: str, size: str = "4x4", user: dict = Depends(requi
     public = os.environ.get("APP_PUBLIC_URL", "")
     lab = (await get_setting("lab", {})) or {}
     d = dent or {}
-    recv_addr = batch.get("delivery_address") or d.get("delivery_address") or d.get("clinic_address") or d.get("billing_address") or ""
+    recv_addr = d.get("delivery_address") or d.get("clinic_address") or d.get("billing_address") or batch.get("delivery_address") or ""
     city_line = ", ".join([x for x in [d.get("city", ""), d.get("state", ""), d.get("pincode", "")] if x])
     label = {
         "order_no": batch["batch_no"],

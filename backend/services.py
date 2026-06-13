@@ -270,128 +270,99 @@ def _wrap(c, text, font, fsize, maxw, maxlines=2):
 
 
 def _draw_label(c, ox, oy, bw, bh, label):
-    """Draw a balanced, well-filled shipping label inside the box (origin bottom-left)."""
+    """Clean black & white shipping label. TO on top (large), FROM at the bottom."""
     snd = label.get("sender", {})
     rcv = label.get("receiver", {})
-    pad = 8
+    pad = 16
     top = oy + bh
-    right = ox + bw - pad
     lx = ox + pad
-    colw = bw - 2 * pad
-    IVORY = colors.HexColor("#F6F1E8")
-    GOLDT = colors.HexColor("#F0E6CE")
-    LINE = colors.HexColor("#D8CFC2")
+    right = ox + bw - pad
+    twmax = bw - 2 * pad
 
-    # 1) Header bar
-    hb = 26
-    c.setFillColor(CHARCOAL)
-    c.rect(ox, top - hb, bw, hb, fill=1, stroke=0)
-    c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(lx, top - 11, (snd.get("name") or "Shree Dental Lab")[:26])
-    c.setFillColor(GOLD)
-    c.setFont("Helvetica", 6)
-    c.drawString(lx, top - 20, "PRECISION   -   QUALITY   -   TRUST")
+    c.setStrokeColor(colors.black)
+    c.setFillColor(colors.black)
 
-    # 2) Order band
-    ob = 24
-    oby = top - hb - ob
-    c.setFillColor(GOLDT)
-    c.rect(ox, oby, bw, ob, fill=1, stroke=0)
-    c.setFillColor(GRAPHITE)
-    c.setFont("Helvetica-Bold", 7)
-    c.drawString(lx, oby + 9, "ORDER NO.")
-    c.setFillColor(RED)
+    # Outer border
+    c.setLineWidth(1.2)
+    c.rect(ox + 5, oy + 5, bw - 10, bh - 10, fill=0, stroke=1)
+
+    # ---- Top: lab name + order no ----
+    y = top - pad - 14
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(lx, y, (snd.get("name") or "Shree Dental Lab")[:28])
+    y -= 22
     c.setFont("Helvetica-Bold", 14)
-    c.drawRightString(right, oby + 7, label.get("order_no", ""))
+    c.drawString(lx, y, "ORDER NO:")
+    c.drawString(lx + c.stringWidth("ORDER NO:  ", "Helvetica-Bold", 14), y, label.get("order_no", ""))
+    tracking = label.get("tracking_no", "")
+    courier = label.get("courier_name", "")
+    if courier or tracking:
+        y -= 16
+        c.setFont("Helvetica", 10)
+        c.drawString(lx, y, ("Courier: " + " / ".join([x for x in [courier, tracking] if x]))[:54])
+    y -= 12
+    c.setLineWidth(1)
+    c.line(lx, y, right, y)
 
-    # 5) Bottom band: QR (left) + dispatch details (right)
-    qr = qrcode.make(label.get("track_url", label.get("order_no", "")))
-    qr_buf = io.BytesIO()
-    qr.save(qr_buf, format="PNG")
-    qr_buf.seek(0)
-    qr_size = max(64, min(bw, bh) * 0.26)
-    bb_h = qr_size + 16
-    c.setFillColor(IVORY)
-    c.rect(ox, oy, bw, bb_h, fill=1, stroke=0)
-    c.setStrokeColor(LINE)
-    c.setLineWidth(0.8)
-    c.line(ox, oy + bb_h, ox + bw, oy + bb_h)
-    qr_x = lx
-    qr_y = oy + (bb_h - qr_size) / 2
-    c.drawImage(ImageReader(qr_buf), qr_x, qr_y, qr_size, qr_size)
-    c.setFillColor(GRAPHITE)
-    c.setFont("Helvetica", 5.5)
-    c.drawCentredString(qr_x + qr_size / 2, oy + 4, "Scan to track")
-
-    ddx = qr_x + qr_size + 10
-    ddw = right - ddx
-    ddy = oy + bb_h - 16
-
-    def dline(lbl, val):
-        nonlocal ddy
-        if not val:
-            return
-        c.setFillColor(GRAPHITE)
-        c.setFont("Helvetica-Bold", 7)
-        c.drawString(ddx, ddy, lbl)
-        c.setFont("Helvetica", 8)
-        c.drawString(ddx + c.stringWidth(lbl, "Helvetica-Bold", 7) + 3, ddy, val[:34])
-        ddy -= 12
-
-    dline("PATIENT ", label.get("patient_names", ""))
-    dline("TEETH ", label.get("teeth", ""))
-    courier = " / ".join([x for x in [label.get("courier_name", ""), label.get("tracking_no", "")] if x])
-    dline("COURIER ", courier)
-    dline("PACKED BY ", label.get("packed_by", ""))
-
-    # 3) FROM block (just under order band)
-    y = oby - 12
-    c.setFillColor(GRAPHITE)
-    c.setFont("Helvetica-Bold", 7)
-    c.drawString(lx, y, "FROM (Sender)"); y -= 11
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(lx, y, (snd.get("name") or "")[:44]); y -= 11
-    c.setFont("Helvetica", 8)
+    # ---- FROM block anchored at the bottom ----
+    fy = oy + pad + 6
+    c.setFont("Helvetica", 11)
     saddr = ", ".join([x for x in [snd.get("address", ""), snd.get("state", "")] if x]) or snd.get("state", "")
-    parts = [p for p in [saddr, ("Ph: " + snd["phone"]) if snd.get("phone") else ""] if p]
-    c.drawString(lx, y, "  •  ".join(parts)[:64]); y -= 6
+    from_lines = []
+    if saddr:
+        from_lines += _wrap(c, saddr, "Helvetica", 11, twmax, 2)
+    if snd.get("phone"):
+        from_lines.append("Ph: " + snd["phone"])
+    # draw bottom-up
+    by = fy
+    for ln in reversed(from_lines):
+        c.setFont("Helvetica", 11)
+        c.drawString(lx, by, ln[:52]); by += 14
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(lx, by, (snd.get("name") or "")[:46]); by += 14
+    c.setFont("Helvetica-Bold", 9)
+    c.drawString(lx, by, "FROM (Sender):"); by += 8
+    from_top = by
+    c.setLineWidth(1)
+    c.line(lx, from_top, right, from_top)
 
-    # 4) DELIVER TO block — shaded full-width box filling the middle
-    box_top = y
-    box_bot = oy + bb_h + 8
-    box_h = box_top - box_bot
-    c.setFillColor(IVORY)
-    c.roundRect(ox + 3, box_bot, bw - 6, box_h, 5, fill=1, stroke=0)
-    c.setStrokeColor(RED)
-    c.setLineWidth(2)
-    c.line(ox + 6, box_bot + 4, ox + 6, box_top - 4)  # red accent bar
+    # ---- DELIVER TO block (large) — auto-fits the middle, never overlaps FROM ----
+    region_top = y - 8
+    region_bot = from_top + 12
+    avail = max(40, region_top - region_bot)
 
-    tx = ox + 14
-    twmax = right - tx
     name = rcv.get("name") or ""
     if name and not name.lower().startswith("dr"):
         name = "Dr. " + name
-    to_lines = [("Helvetica-Bold", 15, name[:30])]
+    specs = [("Helvetica-Bold", 22, name[:28])]
     if rcv.get("clinic"):
-        to_lines.append(("Helvetica-Bold", 10, rcv["clinic"][:40]))
-    for ln in _wrap(c, rcv.get("address", ""), "Helvetica", 10, twmax, 2):
-        to_lines.append(("Helvetica", 10, ln))
+        specs.append(("Helvetica-Bold", 14, rcv["clinic"][:36]))
+    for ln in _wrap(c, rcv.get("address", ""), "Helvetica", 14, twmax, 5):
+        specs.append(("Helvetica", 14, ln))
     if rcv.get("city_line"):
-        to_lines.append(("Helvetica", 10, rcv["city_line"][:44]))
+        specs.append(("Helvetica", 14, rcv["city_line"][:40]))
     if rcv.get("phone"):
-        to_lines.append(("Helvetica-Bold", 11.5, "Ph: " + rcv["phone"]))
+        specs.append(("Helvetica-Bold", 16, "Ph: " + rcv["phone"]))
 
-    block_h = 16 + sum(fs + 5 for _, fs, _ in to_lines)
-    ty = box_top - 14 - max(0, (box_h - block_h) / 2)
-    c.setFillColor(RED)
-    c.setFont("Helvetica-Bold", 9)
-    c.drawString(tx, ty, "DELIVER TO"); ty -= 18
-    c.setFillColor(GRAPHITE)
-    for font, fs, txt in to_lines:
-        c.setFont(font, fs)
-        c.drawString(tx, ty, txt)
-        ty -= fs + 5
+    gap = 7
+    head_h = 24
+    needed = head_h + sum(fs + gap for _, fs, _ in specs)
+    scale = min(1.0, avail / needed)
+    g = gap * scale
+
+    start = region_top - 4
+    if needed < avail:
+        start = region_top - 4 - (avail - needed) / 2
+
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica-Bold", max(9, 11 * scale))
+    c.drawString(lx, start, "DELIVER TO:")
+    ty = start - head_h * scale
+    for font, fs, txt in specs:
+        fs2 = fs * scale
+        c.setFont(font, fs2)
+        c.drawString(lx, ty, txt)
+        ty -= fs2 + g
 
 
 def dispatch_label_pdf(label, size="4x4"):

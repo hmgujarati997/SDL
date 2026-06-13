@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api, { inr, formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Card, Btn, Field, inputCls } from "@/components/UI";
@@ -13,6 +13,11 @@ const uid = () => Math.random().toString(36).slice(2);
 export default function NewOrder() {
   const { user } = useAuth();
   const nav = useNavigate();
+  const dProfile = user?.dentist || {};
+  const profileAddress = [
+    dProfile.delivery_address || dProfile.clinic_address || dProfile.billing_address,
+    [dProfile.city, dProfile.state, dProfile.pincode].filter(Boolean).join(", "),
+  ].filter(Boolean).join(", ");
   const [products, setProducts] = useState([]);
   const [patients, setPatients] = useState([]);
   const [shades, setShades] = useState([]);
@@ -22,7 +27,7 @@ export default function NewOrder() {
 
   const [settings, setSettings] = useState({
     case_input_type: "Digital Scan Upload", urgency: "Normal",
-    pickup_required: false, delivery_required: true, delivery_address: "",
+    pickup_required: false, delivery_required: true,
     notes: "", impression_method: "courier",
   });
   const [cases, setCases] = useState([newCase()]);
@@ -44,7 +49,6 @@ export default function NewOrder() {
       api.get("/meta"),
     ]).then(([p, pa, m]) => {
       setProducts(p.data); setPatients(pa.data); setShades(m.data.shades);
-      setSettings((s) => ({ ...s, delivery_address: user?.dentist?.delivery_address || "" }));
     }).finally(() => setLoading(false));
   }, []);
 
@@ -206,8 +210,10 @@ export default function NewOrder() {
                 </select>
               </Field>
             )}
-            <Field label="Delivery Address">
-              <input className={inputCls} value={settings.delivery_address} onChange={(e) => setSettings({ ...settings, delivery_address: e.target.value })} />
+            <Field label="Delivery Address (from your profile)">
+              <div data-testid="profile-delivery-address" className="rounded-lg border border-brand-taupe/20 bg-brand-ivory px-3 py-2 text-sm text-brand-graphite">
+                {profileAddress || <span className="text-brand-taupe">No address set — add it in your <Link to="/app/profile" className="font-semibold text-brand-red underline">profile</Link>.</span>}
+              </div>
             </Field>
             <div className="flex items-center gap-4 pt-6">
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={settings.pickup_required} onChange={(e) => setSettings({ ...settings, pickup_required: e.target.checked })} /> Pickup required</label>
