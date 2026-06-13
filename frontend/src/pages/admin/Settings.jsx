@@ -3,8 +3,9 @@ import api, { formatApiError } from "@/lib/api";
 import { PageHeader, Card, Btn, Field, inputCls } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 import { toast } from "sonner";
+import StatusMaster from "@/pages/admin/StatusMaster";
 
-const TABS = ["Lab", "GST", "Razorpay", "WhatsApp"];
+const TABS = ["Lab", "GST", "Statuses", "Razorpay", "WhatsApp"];
 
 export default function Settings() {
   const [s, setS] = useState(null);
@@ -29,6 +30,8 @@ export default function Settings() {
           <p className="text-xs text-brand-taupe">CGST+SGST applied for Gujarat (intra-state), IGST for inter-state.</p>
         </Card>
       )}
+
+      {tab === "Statuses" && <StatusMaster />}
 
       {tab === "Razorpay" && (
         <Card className="max-w-lg space-y-3">

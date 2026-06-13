@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useStatuses, colorClasses } from "@/lib/statusColors";
 
 const MAP = {
   "Order Received": "bg-brand-red/10 text-brand-red border-brand-red/20",
@@ -20,7 +21,11 @@ const MAP = {
 };
 
 export function StatusBadge({ status, className }) {
-  const cls = MAP[status] || "bg-brand-taupe/10 text-brand-taupe border-brand-taupe/20";
+  const list = useStatuses();
+  const found = (list || []).find((s) => s.label === status);
+  const cls = found
+    ? colorClasses(found.color).badge
+    : (MAP[status] || "bg-brand-taupe/10 text-brand-taupe border-brand-taupe/20");
   return (
     <span
       data-testid="status-badge"

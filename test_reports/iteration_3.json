@@ -1,0 +1,28 @@
+{
+  "summary": "Frontend-only verification of the new Status Master feature (Settings → Statuses tab). All 10 spec checks PASS. Admin login at admin@shreedentallab.com / changeme123 succeeds without forced password change (URL after login is /app, not /change-password). Settings page exposes 5 tabs in order [Lab, GST, Statuses, Razorpay, WhatsApp] — Statuses sits between GST and Razorpay as required. Status Master lists 16 rows (12 core + 4 custom; seed defines 19 but 3 trial_* rows had been deleted by earlier test runs — pre-existing data state, NOT a regression). Core rows render a lock icon + 'core' tag, have NO editable name input, NO trash icon, Active checkbox is disabled. Custom rows render an editable input (data-testid='status-label-<id>'), a trash icon (data-testid='status-delete-<id>'), enabled Active checkbox, full color swatch row, and Board checkbox. Verified end-to-end: (a) Add custom status 'Polishing QA' via data-testid='new-status-label' + 'add-status-btn' → success toast 'Status added', new row appended at bottom. (b) Rename custom 'Polishing'→'Polishing 2' via label input + blur → persists across full page reload. (c) Color change: clicking the 'purple' swatch in the custom row persists across reload (ring-2 indicator appears on the purple swatch). (d) Board toggle OFF on custom row → /app/board column count drops from 15→14 and the status no longer appears as a column. Toggle back ON → column re-appears at correct position with a colored dot in the header. (e) /app/board does NOT show 'Delivered' or 'Cancelled' columns (both have show_on_board=false in seed; verified visually with Board checkbox unchecked in Status Master). (f) Each board column header renders a small colored dot matching the status colour (15 dots for 15 columns). (g) Delete custom 'Polishing QA' via trash icon → confirm() dialog → row removed and 'Status deleted' toast shown. (h) Admin order detail (/app/orders/<id>) Update Status dropdown lists all active master statuses incl. any active custom one (verified 'Polishing Test' appeared while it existed). Cleanup: all custom statuses created during this run were deleted at the end of the test.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Status Master row", "issues": ["The custom-row layout puts the editable name input AFTER the badge (e.g. 'Design Received [badge]  Design Received [input]'); the badge already shows the rendered label, so the duplicated visual is a bit noisy. Non-blocking — purely cosmetic."]}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_3.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "statusColors.js useStatuses() uses a module-level _cache + _promise singleton. invalidateStatuses() is called inside StatusMaster.load() after every add/patch/reorder which is correct, BUT: if a non-admin tab is open elsewhere (e.g. dentist's order list with StatusBadge using useStatuses) it will NOT see changes until that tab is reloaded — acceptable for an admin-only mutation surface but worth noting.",
+    "ProductionBoard.jsx renders a colored dot via `colorClasses(col.color).dot` which returns literal Tailwind class strings — JIT safe because all 10 color variants are listed literally in statusColors.js PALETTE. Good.",
+    "status_routes.add_status() defaults show_on_board to True when the body omits it (`body.get('show_on_board', True)`), which matches StatusMaster.add() that always sends show_on_board:true. Consistent.",
+    "status_routes.update_status_master() renames are migrated across order_batches/order_cases/order_items via update_many — good. However there is no transaction, so a partial failure mid-migration could leave inconsistent state. Low risk for this scale.",
+    "Seeded 19 statuses are an `if count==0` check (ensure_statuses). Once any have been deleted, they are NOT re-seeded — that is why this preview DB shows 16 rows (3 trial_* statuses were deleted in earlier QA runs). Acceptable but worth a one-line note in the seed function if re-seeding is ever desired."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not retested (skipped per request)", "frontend": "100% (10/10 spec checks passed)"},
+  "test_credentials": "admin@shreedentallab.com / changeme123 (must_change_password is FALSE — login goes directly to /app, no forced reset). Confirmed working.",
+  "seed_data_creation": "Created during testing then deleted at end: 'Polishing Test' and 'Polishing QA' custom statuses. One pre-existing custom status 'Polishing 2' (renamed from 'Polishing' in a prior iteration's transient run) remained from the first sub-test before cleanup — confirmed absent at the end of the final run. DB state is back to the original 16 statuses.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Status Master feature is fully working end-to-end. Important testing note: the Production Board column header uses CSS `text-transform: uppercase`, so DOM innerText returns the rendered uppercase form (e.g. 'POLISHING QA'). Use `.toLowerCase()` or case-insensitive contains when asserting column presence — a naive substring check for the original mixed-case label will produce false negatives. Admin password remains 'changeme123' and login does NOT trigger a change-password redirect.",
+  "rca of the issue": "N/A — no defects found in the Status Master feature."
+}

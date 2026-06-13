@@ -32,6 +32,10 @@ EVENT_FOR_STATUS = {
     "Impression Received": "impression_received",
 }
 
+# WhatsApp messages are sent ONLY for these events (order received & couriered/dispatched).
+# All other status changes still create in-app notifications but no WhatsApp.
+WHATSAPP_SEND_EVENTS = {"order_placed", "impression_placed", "dispatched"}
+
 
 async def _dentist_of(batch):
     return await db.dentists.find_one({"id": batch["dentist_id"]}, {"_id": 0})
@@ -44,11 +48,13 @@ async def notify(batch, event, fields, *, title, body, status_text=None):
     cases = await db.order_cases.find({"batch_id": batch["id"]}, {"_id": 0}).to_list(50)
     if cases:
         patient = ", ".join(c["patient_name"] for c in cases[:2])
-    await send_whatsapp(
-        event=event, to_phone=(dent or {}).get("whatsapp", ""),
-        dentist_name=(dent or {}).get("name", ""), order_no=batch["batch_no"],
-        patient_name=patient, fields=fields, deep_link_suffix=suffix,
-    )
+    # WhatsApp is sent ONLY when an order is received and when it is couriered (dispatched).
+    if event in WHATSAPP_SEND_EVENTS:
+        await send_whatsapp(
+            event=event, to_phone=(dent or {}).get("whatsapp", ""),
+            dentist_name=(dent or {}).get("name", ""), order_no=batch["batch_no"],
+            patient_name=patient, fields=fields, deep_link_suffix=suffix,
+        )
     if dent:
         await create_notification(dent["user_id"], title, body, order_id=batch["id"], kind="order")
 
@@ -464,7 +470,8 @@ async def update_status(bid: str, body: StatusIn,
     batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
     if not batch:
         raise HTTPException(404, "Order not found")
-    if body.status not in ALL_STATUSES:
+    from routes.status_routes import active_status_labels
+    if body.status not in await active_status_labels():
         raise HTTPException(400, "Invalid status")
     old = batch["status"]
     upd = {"status": body.status, "updated_at": now_iso()}

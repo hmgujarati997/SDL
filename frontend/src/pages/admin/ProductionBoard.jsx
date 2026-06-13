@@ -3,24 +3,30 @@ import { Link } from "react-router-dom";
 import api, { inr, fmtDate } from "@/lib/api";
 import { PageHeader } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
-
-const COLS = ["Order Received", "Order Accepted", "Sent to Designer", "Design Received", "Cutting Started", "Sintering Started", "Glazing Started", "QC Done / Ready for Packaging", "Packed / Dispatch Label Printed", "Dispatched", "On Hold"];
+import { useStatuses, colorClasses } from "@/lib/statusColors";
 
 export default function ProductionBoard() {
   const [orders, setOrders] = useState(null);
+  const statuses = useStatuses();
   useEffect(() => { api.get("/orders").then(({ data }) => setOrders(data)).catch(() => {}); }, []);
-  if (!orders) return <Spinner />;
+  if (!orders || !statuses) return <Spinner />;
+
+  const cols = statuses.filter((s) => s.active && s.show_on_board);
+
   return (
     <div>
       <PageHeader title="Production Board" subtitle="Cases across every workflow stage" />
       <div className="overflow-x-auto pb-4">
-        <div className="flex gap-4" style={{ minWidth: COLS.length * 260 }}>
-          {COLS.map((col) => {
-            const items = orders.filter((o) => o.status === col);
+        <div className="flex gap-4" style={{ minWidth: cols.length * 260 }}>
+          {cols.map((col) => {
+            const items = orders.filter((o) => o.status === col.label);
             return (
-              <div key={col} className="w-60 shrink-0">
+              <div key={col.id} className="w-60 shrink-0">
                 <div className="mb-2 flex items-center justify-between rounded-lg bg-brand-charcoal px-3 py-2 text-white">
-                  <span className="text-xs font-semibold uppercase tracking-wider">{col}</span>
+                  <span className="flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${colorClasses(col.color).dot}`} />
+                    <span className="text-xs font-semibold uppercase tracking-wider">{col.label}</span>
+                  </span>
                   <span className="rounded-full bg-brand-red px-2 text-xs font-bold">{items.length}</span>
                 </div>
                 <div className="space-y-2">
