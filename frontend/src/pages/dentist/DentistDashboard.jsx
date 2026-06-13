@@ -32,7 +32,7 @@ export default function DentistDashboard() {
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <StatCard testid="stat-total" label="Total Orders" value={d.total} icon={Package} />
-        <StatCard testid="stat-pending" label="Pending" value={d.pending} icon={Clock} accent="gold" />
+        <StatCard testid="stat-pending" label="Pending Orders" value={d.pending} icon={Clock} accent="gold" />
         <StatCard label="In Manufacturing" value={d.in_manufacturing} icon={Factory} accent="charcoal" />
         <StatCard label="Ready / Dispatch" value={d.ready + d.dispatched} icon={Truck} accent="gold" />
         <StatCard label="Delivered" value={d.delivered} icon={CheckCircle2} accent="green" />

@@ -34,3 +34,24 @@ Backend 23/23 pytest PASSED. No critical/UI bugs. Mock: Razorpay payments, Whats
 ## Next Action Items
 1. Provide Razorpay keys + WhatsApp provider creds to switch off mock mode.
 2. Build trial workflow + pickup queue + CSV export next iteration.
+
+## Update (2026-06-12) — Session changes
+- Homepage: bigger hero CTA buttons (RollButton `size="lg"`) + plain-language helper line for non-tech doctors; "How to order" on white bg; equal `aspect-[4/3]` restoration images; nav links enlarged.
+- Production Board: removed "Delivered" column.
+- Dentist approval REMOVED: registration sets dentist status "active"; removed approval banner; removed admin approve/reject/deactivate. Admin Dentists = searchable list with full detail expander + per-dentist pricing.
+- Admin: DELETE dentist (typed-name confirmation, cascade delete) and full Team management (edit, change password, activate/deactivate, delete with self/last-admin guards).
+- Pricing Master: inline-editable product name. Offers: click-to-edit offer name (pencil), Save Offer persists.
+- Reports: date From/To + presets (Today/7d/30d/This month/All) + CSV export endpoint `/api/reports/export`.
+- Login page: removed "Dentist, admin, designer & team access." subtitle.
+- DEV FIX: file-watcher (inotify) wasn't firing → enabled WATCHPACK_POLLING/CHOKIDAR_USEPOLLING in frontend/.env so edits auto-recompile (was causing "changes not reflecting").
+
+## PAY-UPFRONT payment model (2026-06-12) — IMPORTANT
+- Order is created ONLY after full payment. New flow: NewOrder → POST /orders/checkout (creates Razorpay order for full quote) → Razorpay Checkout → POST /orders WITH razorpay_order_id/payment_id/signature (server verifies, then creates order as Paid). Missing/invalid payment → 402/400, no order.
+- Removed ALL pending-payment UI/actions: dentist+admin "Pending Payment(s)" stat cards, OrderDetail PayButton + admin PaymentBlock (Send Payment Request/Set Paid), invoices "Pending" column, OrderDetail "Pending" row. Header shows green "Paid" pill.
+- Removed backend endpoints: payment/request, payment/create, payments/{id}/verify, payment/manual.
+- Razorpay SDK installed (razorpay==2.0.1). REAL mode activates when Admin→Settings→Razorpay has enabled+key_id+key_secret; otherwise MOCK mode (frontend auto-simulates success). Free remakes (₹0) skip payment.
+- Verified: backend curl (checkout, 402 enforcement, mock placement → status Paid) + testing_agent frontend 9/9 PASS (iteration_2.json).
+
+## Still pending from user
+- Real Razorpay keys (Key ID + Secret) to switch off mock mode — user wants live, keys not yet provided.
+- About/Contact premium restyle (P1). WhatsApp live creds (P1).
