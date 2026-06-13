@@ -3,7 +3,7 @@ import api, { formatApiError } from "@/lib/api";
 import { PageHeader, Card, Btn, inputCls } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 
 export default function Offers() {
   const [offers, setOffers] = useState(null);
@@ -41,9 +41,16 @@ function OfferCard({ offer, tiers, onSave }) {
 
   return (
     <Card>
-      <div className="flex items-center justify-between">
-        <input className="font-heading text-lg font-bold outline-none" value={o.name} onChange={(e) => setO({ ...o, name: e.target.value })} />
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={o.active} onChange={(e) => setO({ ...o, active: e.target.checked })} /> Active</label>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1">
+          <label className="text-xs font-semibold uppercase tracking-wider text-brand-taupe">Offer name (editable)</label>
+          <div className="flex items-center gap-2">
+            <input data-testid={`offer-name-${o.id}`} className="w-full rounded-lg border border-brand-taupe/30 px-3 py-1.5 font-heading text-lg font-bold text-brand-graphite focus:border-brand-red focus:outline-none"
+              value={o.name} onChange={(e) => setO({ ...o, name: e.target.value })} />
+            <Pencil className="h-4 w-4 shrink-0 text-brand-taupe" />
+          </div>
+        </div>
+        <label className="flex items-center gap-2 self-end pb-2 text-sm"><input type="checkbox" checked={o.active} onChange={(e) => setO({ ...o, active: e.target.checked })} /> Active</label>
       </div>
       <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-brand-taupe">Applicable Tiers</p>
       <div className="mt-1 flex flex-wrap gap-2">

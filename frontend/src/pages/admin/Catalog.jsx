@@ -3,13 +3,14 @@ import api, { inr, formatApiError } from "@/lib/api";
 import { PageHeader, Card, Btn, inputCls } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
 
 export default function Catalog() {
   const [products, setProducts] = useState(null);
   const load = () => api.get("/products").then(({ data }) => setProducts(data)).catch(() => {});
   useEffect(() => { load(); }, []);
 
+  const renameProduct = async (pid, name) => { try { await api.put(`/products/${pid}`, { name }); toast.success("Name updated"); load(); } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); } };
   const saveTier = async (t) => { try { await api.put(`/tiers/${t.id}`, t); toast.success("Tier updated"); load(); } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); } };
   const addTier = async (pid) => {
     const name = prompt("Tier name?"); if (!name) return;
@@ -38,7 +39,7 @@ export default function Catalog() {
         {products.map((p) => (
           <Card key={p.id}>
             <div className="flex items-center justify-between">
-              <div><h3 className="font-heading text-lg font-bold">{p.name}</h3><p className="text-xs text-brand-taupe">{p.category} · {p.unit_type} · TAT {p.default_tat}d</p></div>
+              <ProductName product={p} onRename={renameProduct} />
               <div className="flex items-center gap-2">
                 <Btn variant="outline" onClick={() => addTier(p.id)}><Plus className="h-4 w-4" />Tier</Btn>
                 <Btn variant="ghost" data-testid={`remove-product-${p.id}`} onClick={() => removeProduct(p)}><Trash2 className="h-4 w-4" />Remove</Btn>
@@ -50,6 +51,38 @@ export default function Catalog() {
           </Card>
         ))}
       </div>
+    </div>
+  );
+}
+
+function ProductName({ product, onRename }) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(product.name);
+  const commit = () => {
+    const v = name.trim();
+    if (!v) { setName(product.name); setEditing(false); return; }
+    if (v !== product.name) onRename(product.id, v);
+    setEditing(false);
+  };
+  if (editing) {
+    return (
+      <div className="flex items-center gap-2">
+        <input data-testid={`product-name-input-${product.id}`} autoFocus className={inputCls + " font-heading text-lg font-bold"}
+          value={name} onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") { setName(product.name); setEditing(false); } }} />
+        <Btn data-testid={`product-name-save-${product.id}`} className="px-3" onClick={commit}><Check className="h-4 w-4" /></Btn>
+        <Btn variant="ghost" className="px-2" onClick={() => { setName(product.name); setEditing(false); }}><X className="h-4 w-4" /></Btn>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <button data-testid={`product-name-edit-${product.id}`} onClick={() => setEditing(true)}
+        className="group flex items-center gap-2 text-left">
+        <h3 className="font-heading text-lg font-bold text-brand-graphite">{product.name}</h3>
+        <Pencil className="h-3.5 w-3.5 text-brand-taupe opacity-60 transition group-hover:text-brand-red group-hover:opacity-100" />
+      </button>
+      <p className="text-xs text-brand-taupe">{product.category} · {product.unit_type} · TAT {product.default_tat}d</p>
     </div>
   );
 }
