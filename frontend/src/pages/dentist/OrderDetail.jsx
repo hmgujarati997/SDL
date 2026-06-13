@@ -297,13 +297,45 @@ function FileIssueBlock({ order, reasons, onDone }) {
 }
 
 function AssignDesigner({ order, designers, onDone }) {
-  const [d, setD] = useState("");
+  const [d, setD] = useState(order.designer_id || "");
+  const [busy, setBusy] = useState(false);
+  const [load2, setLoad2] = useState({});
+
+  useEffect(() => {
+    api.get("/designer/orders").then(({ data }) => {
+      const m = {};
+      (data || []).forEach((o) => {
+        if (o.designer_id && !["Delivered", "Cancelled"].includes(o.status)) m[o.designer_id] = (m[o.designer_id] || 0) + 1;
+      });
+      setLoad2(m);
+    }).catch(() => {});
+  }, []);
+
+  const assign = async () => {
+    if (!d) return;
+    setBusy(true);
+    try { await api.post(`/orders/${order.id}/assign-designer`, { designer_id: d }); toast.success("Designer assigned"); onDone(); }
+    catch (e) { toast.error(formatApiError(e.response?.data?.detail)); }
+    setBusy(false);
+  };
+
   return (
-    <div className="flex gap-2">
-      <select data-testid="designer-select" className={inputCls} value={d} onChange={(e) => setD(e.target.value)}>
-        <option value="">Assign designer...</option>{designers.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
-      </select>
-      <Btn variant="dark" onClick={async () => { if (!d) return; try { await api.post(`/orders/${order.id}/assign-designer`, { designer_id: d }); toast.success("Assigned"); onDone(); } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); } }}>Assign</Btn>
+    <div className="rounded-xl border border-brand-taupe/20 p-3">
+      <p className="mb-1 text-sm font-semibold text-brand-graphite">Designer</p>
+      {order.designer_name
+        ? <p className="mb-2 text-sm text-brand-graphite">Currently assigned: <b>{order.designer_name}</b></p>
+        : <p className="mb-2 text-sm text-brand-taupe">No designer assigned yet.</p>}
+      {designers.length === 0 ? (
+        <p className="rounded-lg bg-brand-ivory p-2 text-xs text-brand-taupe">No designers found. Add a designer in <Link to="/app/users" className="font-semibold text-brand-red underline">Team</Link>.</p>
+      ) : (
+        <div className="flex gap-2">
+          <select data-testid="designer-select" className={inputCls} value={d} onChange={(e) => setD(e.target.value)}>
+            <option value="">Choose designer…</option>
+            {designers.map((x) => <option key={x.id} value={x.id}>{x.name}{load2[x.id] ? ` · ${load2[x.id]} active` : " · free"}</option>)}
+          </select>
+          <Btn variant="dark" data-testid="assign-designer-btn" onClick={assign} disabled={!d || busy}>{order.designer_id ? "Reassign" : "Assign"}</Btn>
+        </div>
+      )}
     </div>
   );
 }
