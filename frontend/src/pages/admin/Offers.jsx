@@ -3,7 +3,7 @@ import api, { formatApiError } from "@/lib/api";
 import { PageHeader, Card, Btn, inputCls } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
 
 export default function Offers() {
   const [offers, setOffers] = useState(null);
@@ -34,23 +34,37 @@ export default function Offers() {
 
 function OfferCard({ offer, tiers, onSave }) {
   const [o, setO] = useState(offer);
+  const [editName, setEditName] = useState(false);
+  const [nameDraft, setNameDraft] = useState(offer.name);
   const setSlab = (i, k, v) => setO({ ...o, slabs: o.slabs.map((s, j) => (j === i ? { ...s, [k]: Number(v) } : s)) });
   const addSlab = () => setO({ ...o, slabs: [...o.slabs, { min_units: 0, discount: 0 }] });
   const delSlab = (i) => setO({ ...o, slabs: o.slabs.filter((_, j) => j !== i) });
   const toggleTier = (id) => setO({ ...o, tier_ids: (o.tier_ids || []).includes(id) ? o.tier_ids.filter((x) => x !== id) : [...(o.tier_ids || []), id] });
+  const commitName = () => {
+    const v = nameDraft.trim();
+    if (!v) { setNameDraft(o.name); setEditName(false); return; }
+    setO({ ...o, name: v });
+    setEditName(false);
+  };
 
   return (
     <Card>
       <div className="flex items-center justify-between gap-3">
-        <div className="flex-1">
-          <label className="text-xs font-semibold uppercase tracking-wider text-brand-taupe">Offer name (editable)</label>
-          <div className="flex items-center gap-2">
-            <input data-testid={`offer-name-${o.id}`} className="w-full rounded-lg border border-brand-taupe/30 px-3 py-1.5 font-heading text-lg font-bold text-brand-graphite focus:border-brand-red focus:outline-none"
-              value={o.name} onChange={(e) => setO({ ...o, name: e.target.value })} />
-            <Pencil className="h-4 w-4 shrink-0 text-brand-taupe" />
+        {editName ? (
+          <div className="flex flex-1 items-center gap-2">
+            <input data-testid={`offer-name-input-${o.id}`} autoFocus className={inputCls + " font-heading text-lg font-bold"}
+              value={nameDraft} onChange={(e) => setNameDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") commitName(); if (e.key === "Escape") { setNameDraft(o.name); setEditName(false); } }} />
+            <Btn data-testid={`offer-name-confirm-${o.id}`} className="px-3" onClick={commitName}><Check className="h-4 w-4" /></Btn>
+            <Btn variant="ghost" className="px-2" onClick={() => { setNameDraft(o.name); setEditName(false); }}><X className="h-4 w-4" /></Btn>
           </div>
-        </div>
-        <label className="flex items-center gap-2 self-end pb-2 text-sm"><input type="checkbox" checked={o.active} onChange={(e) => setO({ ...o, active: e.target.checked })} /> Active</label>
+        ) : (
+          <button data-testid={`offer-name-edit-${o.id}`} onClick={() => { setNameDraft(o.name); setEditName(true); }} className="group flex items-center gap-2 text-left">
+            <h3 className="font-heading text-lg font-bold text-brand-graphite">{o.name}</h3>
+            <Pencil className="h-3.5 w-3.5 text-brand-taupe opacity-60 transition group-hover:text-brand-red group-hover:opacity-100" />
+          </button>
+        )}
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={o.active} onChange={(e) => setO({ ...o, active: e.target.checked })} /> Active</label>
       </div>
       <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-brand-taupe">Applicable Tiers</p>
       <div className="mt-1 flex flex-wrap gap-2">
