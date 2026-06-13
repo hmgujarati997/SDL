@@ -37,8 +37,7 @@ const NAV = {
     { to: "/app/board", icon: KanbanSquare, label: "Production Board" },
   ],
   designer: [
-    { to: "/app", icon: LayoutDashboard, label: "Dashboard", end: true },
-    { to: "/app/orders", icon: Palette, label: "My Assignments" },
+    { to: "/app", icon: Palette, label: "My Assignments", end: true },
   ],
 };
 

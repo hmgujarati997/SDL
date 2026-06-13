@@ -31,6 +31,9 @@ import Settings from "@/pages/admin/Settings";
 import WhatsAppLogs from "@/pages/admin/WhatsAppLogs";
 import Reports from "@/pages/admin/Reports";
 
+import DesignerOrders from "@/pages/designer/DesignerOrders";
+import DesignerOrderDetail from "@/pages/designer/DesignerOrderDetail";
+
 function ChangePassword() {
   const { refresh } = useAuth();
   const [pw, setPw] = useState("");
@@ -62,7 +65,19 @@ function Protected({ children }) {
 
 function DashboardSwitch() {
   const { user } = useAuth();
-  return user?.role === "dentist" ? <DentistDashboard /> : <AdminDashboard />;
+  if (user?.role === "dentist") return <DentistDashboard />;
+  if (user?.role === "designer") return <DesignerOrders />;
+  return <AdminDashboard />;
+}
+
+function OrdersRoute() {
+  const { user } = useAuth();
+  return user?.role === "designer" ? <DesignerOrders /> : <Orders />;
+}
+
+function OrderDetailRoute() {
+  const { user } = useAuth();
+  return user?.role === "designer" ? <DesignerOrderDetail /> : <OrderDetail />;
 }
 
 function AdminOnly({ children }) {
@@ -86,8 +101,8 @@ export default function App() {
           <Route path="/app/profile" element={<Protected><Profile /></Protected>} />
           <Route path="/app/patients" element={<Protected><Patients /></Protected>} />
           <Route path="/app/new-order" element={<Protected><NewOrder /></Protected>} />
-          <Route path="/app/orders" element={<Protected><Orders /></Protected>} />
-          <Route path="/app/orders/:id" element={<Protected><OrderDetail /></Protected>} />
+          <Route path="/app/orders" element={<Protected><OrdersRoute /></Protected>} />
+          <Route path="/app/orders/:id" element={<Protected><OrderDetailRoute /></Protected>} />
           <Route path="/app/my-pricing" element={<Protected><MyPricing /></Protected>} />
           <Route path="/app/invoices" element={<Protected><Invoices /></Protected>} />
 
@@ -100,7 +115,7 @@ export default function App() {
           <Route path="/app/whatsapp" element={<Protected><AdminOnly><WhatsAppLogs /></AdminOnly></Protected>} />
           <Route path="/app/reports" element={<Protected><AdminOnly><Reports /></AdminOnly></Protected>} />
 
-          <Route path="/orders/:id" element={<Protected><OrderDetail /></Protected>} />
+          <Route path="/orders/:id" element={<Protected><OrderDetailRoute /></Protected>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

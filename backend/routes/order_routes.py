@@ -361,7 +361,44 @@ async def list_orders(status: Optional[str] = None, q: Optional[str] = None,
 @router.get("/designer/orders")
 async def designer_orders(user: dict = Depends(require_roles("designer", "admin"))):
     q = {"designer_id": user["id"]} if user["role"] == "designer" else {"designer_id": {"$ne": None}}
-    return await db.order_batches.find(q, {"_id": 0}).sort("created_at", -1).to_list(500)
+    if user["role"] != "designer":
+        return await db.order_batches.find(q, {"_id": 0}).sort("created_at", -1).to_list(500)
+    # Designers get only the bare minimum: order no, status, dates, review flag.
+    rows = await db.order_batches.find(
+        q, {"_id": 0, "id": 1, "batch_no": 1, "status": 1, "created_at": 1,
+            "updated_at": 1, "designer_id": 1, "design_submitted": 1}).sort("created_at", -1).to_list(500)
+    return rows
+
+
+DESIGNER_FILE_CATEGORIES = {"dentist", "photo", "design"}
+
+
+async def _designer_files(bid):
+    files = await db.order_files.find(
+        {"batch_id": bid, "deleted": {"$ne": True}},
+        {"_id": 0, "id": 1, "filename": 1, "category": 1, "size": 1,
+         "uploaded_by_role": 1, "created_at": 1}).sort("created_at", 1).to_list(500)
+    return [f for f in files if f.get("category") in DESIGNER_FILE_CATEGORIES]
+
+
+def _designer_view(batch, files):
+    return {
+        "id": batch["id"], "batch_no": batch["batch_no"], "status": batch["status"],
+        "created_at": batch.get("created_at"), "updated_at": batch.get("updated_at"),
+        "design_submitted": batch.get("design_submitted", False), "files": files,
+    }
+
+
+@router.get("/designer/orders/{bid}")
+async def designer_order_detail(bid: str, user: dict = Depends(require_roles("designer", "admin"))):
+    batch = await db.order_batches.find_one({"id": bid}, {"_id": 0}) or \
+        await db.order_batches.find_one({"batch_no": bid}, {"_id": 0})
+    if not batch:
+        raise HTTPException(404, "Order not found")
+    if user["role"] == "designer" and batch.get("designer_id") != user["id"]:
+        raise HTTPException(403, "This case is not assigned to you")
+    files = await _designer_files(batch["id"])
+    return _designer_view(batch, files)
 
 
 async def _order_detail(batch):
@@ -386,6 +423,11 @@ async def get_order(bid: str, user: dict = Depends(get_current_user)):
         await db.order_batches.find_one({"batch_no": bid}, {"_id": 0})
     if not batch:
         raise HTTPException(404, "Order not found")
+    if user["role"] == "designer":
+        # Designers only ever see order no + files via the restricted view.
+        if batch.get("designer_id") != user["id"]:
+            raise HTTPException(403, "This case is not assigned to you")
+        return _designer_view(batch, await _designer_files(batch["id"]))
     if user["role"] == "dentist":
         dent = await db.dentists.find_one({"user_id": user["id"]}, {"_id": 0})
         if not dent or batch["dentist_id"] != dent["id"]:
@@ -419,6 +461,15 @@ async def upload_file(bid: str, file: UploadFile = File(...), level: str = Form(
     await db.order_files.insert_one(doc)
     await log_activity(bid, f"{user['role'].title()} uploaded file: {file.filename}", user,
                        dentist_visible=(category in ("dentist", "designer")))
+    # Designer submitted a design → flag for admin review + notify all admins
+    if user["role"] == "designer" or category == "design":
+        await db.order_batches.update_one({"id": bid}, {"$set": {
+            "design_submitted": True, "design_submitted_at": now_iso()}})
+        admins = await db.users.find({"role": "admin"}, {"id": 1, "_id": 0}).to_list(50)
+        for a in admins:
+            await create_notification(a["id"], "Design uploaded",
+                                      f"{user['name']} uploaded a design for {batch['batch_no']}. Please review.",
+                                      order_id=bid, kind="design")
     # clear file issue if dentist re-uploads
     if user["role"] == "dentist" and batch.get("file_issue"):
         await db.order_batches.update_one({"id": bid}, {"$set": {"file_issue": None}})
@@ -469,7 +520,7 @@ class StatusIn(BaseModel):
 
 @router.post("/orders/{bid}/status")
 async def update_status(bid: str, body: StatusIn,
-                        user: dict = Depends(require_roles("admin", "employee", "designer"))):
+                        user: dict = Depends(require_roles("admin", "employee"))):
     if user["role"] == "employee" and "update_status" not in (user.get("permissions") or []):
         raise HTTPException(403, "No permission to update status")
     batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
@@ -480,6 +531,8 @@ async def update_status(bid: str, body: StatusIn,
         raise HTTPException(400, "Invalid status")
     old = batch["status"]
     upd = {"status": body.status, "updated_at": now_iso()}
+    if body.status != "Sent to Designer":
+        upd["design_submitted"] = False
     # expected delivery on acceptance
     if body.status == "Order Accepted" and not batch.get("expected_delivery"):
         items = await db.order_items.find({"batch_id": bid}, {"_id": 0}).to_list(200)
@@ -548,7 +601,7 @@ async def assign_designer(bid: str, body: dict = Body(...), user: dict = Depends
     designer = await db.users.find_one({"id": body["designer_id"], "role": "designer"}, {"_id": 0})
     if not designer:
         raise HTTPException(400, "Designer not found")
-    await db.order_batches.update_one({"id": bid}, {"$set": {"designer_id": designer["id"], "designer_name": designer["name"]}})
+    await db.order_batches.update_one({"id": bid}, {"$set": {"designer_id": designer["id"], "designer_name": designer["name"], "design_submitted": False}})
     await log_activity(bid, f"Assigned to designer {designer['name']}", user, dentist_visible=False)
     await create_notification(designer["id"], "New assignment", f"Order assigned to you", order_id=bid, kind="assignment")
     batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})

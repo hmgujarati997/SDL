@@ -70,6 +70,13 @@ export default function OrderDetail() {
         </div>
       )}
 
+      {isAdmin && o.design_submitted && (
+        <div className="mt-4 flex items-center gap-3 rounded-xl border border-green-300 bg-green-50 p-4" data-testid="design-submitted-banner">
+          <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <p className="text-sm text-brand-graphite">The designer has uploaded a design. Review the <b>design file</b> below — mark status <b>"Design Received"</b> if it's correct, or contact the designer to re-upload.</p>
+        </div>
+      )}
+
       <div className="mt-5 grid gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
           {/* Timeline */}
