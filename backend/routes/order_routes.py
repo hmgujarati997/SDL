@@ -439,9 +439,14 @@ async def download_file(fid: str, request: Request, user: dict = Depends(get_cur
     path = UPLOAD_DIR / f["stored_name"]
     if not path.exists():
         raise HTTPException(404, "File missing on disk")
+    import mimetypes
+    ext = os.path.splitext(f["filename"])[1].lower()
+    is_image = ext in (".jpg", ".jpeg", ".png", ".webp", ".gif")
+    media_type = mimetypes.guess_type(f["filename"])[0] or "application/octet-stream"
+    disposition = "inline" if is_image else "attachment"
     return StreamingResponse(io.BytesIO(path.read_bytes()),
-                             media_type="application/octet-stream",
-                             headers={"Content-Disposition": f'attachment; filename="{f["filename"]}"'})
+                             media_type=media_type if is_image else "application/octet-stream",
+                             headers={"Content-Disposition": f'{disposition}; filename="{f["filename"]}"'})
 
 
 @router.delete("/files/{fid}")

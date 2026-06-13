@@ -6,7 +6,7 @@ import { Card, Btn, Field, inputCls } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 import ToothChart from "@/components/ToothChart";
 import { toast } from "sonner";
-import { Plus, Trash2, Sparkles, Check, ChevronRight, Upload, X } from "lucide-react";
+import { Plus, Trash2, Sparkles, Check, ChevronRight, Upload, X, Image as ImageIcon } from "lucide-react";
 
 const uid = () => Math.random().toString(36).slice(2);
 
@@ -27,6 +27,7 @@ export default function NewOrder() {
   });
   const [cases, setCases] = useState([newCase()]);
   const [files, setFiles] = useState([]);
+  const [photos, setPhotos] = useState([]);
   const [quote, setQuote] = useState(null);
 
   function newCase() {
@@ -125,6 +126,11 @@ export default function NewOrder() {
     for (const f of files) {
       const fd = new FormData();
       fd.append("file", f); fd.append("level", "batch"); fd.append("category", "dentist");
+      try { await api.post(`/orders/${data.id}/files`, fd); } catch {}
+    }
+    for (const p of photos) {
+      const fd = new FormData();
+      fd.append("file", p); fd.append("level", "batch"); fd.append("category", "photo");
       try { await api.post(`/orders/${data.id}/files`, fd); } catch {}
     }
     toast.success(`Payment successful · Order ${data.batch_no} placed!`);
@@ -316,7 +322,7 @@ export default function NewOrder() {
         <Card>
           <h3 className="font-heading text-lg font-bold">4 · Upload Files {impression && <span className="text-sm font-normal text-brand-taupe">(optional for impressions)</span>}</h3>
           <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-taupe/30 p-6 text-brand-taupe hover:border-brand-red">
-            <Upload className="h-5 w-5" /> Choose scan files (STL, OBJ, PLY, ZIP, PDF, JPG, PNG)
+            <Upload className="h-5 w-5" /> Choose scan files (STL, OBJ, PLY, ZIP, PDF)
             <input type="file" multiple className="hidden" data-testid="order-file-input" onChange={(e) => setFiles([...files, ...Array.from(e.target.files)])} />
           </label>
           {files.length > 0 && (
@@ -329,6 +335,30 @@ export default function NewOrder() {
               ))}
             </div>
           )}
+
+          {/* Case photos */}
+          <div className="mt-5 border-t border-brand-taupe/15 pt-4">
+            <h4 className="flex items-center gap-2 font-heading text-base font-bold text-brand-graphite"><ImageIcon className="h-4 w-4 text-brand-red" /> Case Photos <span className="text-sm font-normal text-brand-taupe">(optional)</span></h4>
+            <p className="mt-1 text-xs text-brand-taupe">Add intra-oral / shade / patient photos along with your scan. JPG, PNG or WEBP.</p>
+            <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-taupe/30 p-5 text-brand-taupe hover:border-brand-red">
+              <ImageIcon className="h-5 w-5" /> Add photos
+              <input type="file" accept="image/*" multiple className="hidden" data-testid="order-photo-input"
+                onChange={(e) => setPhotos([...photos, ...Array.from(e.target.files)])} />
+            </label>
+            {photos.length > 0 && (
+              <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {photos.map((p, i) => (
+                  <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border border-brand-taupe/20">
+                    <img src={URL.createObjectURL(p)} alt={p.name} className="h-full w-full object-cover" />
+                    <button onClick={() => setPhotos(photos.filter((_, j) => j !== i))}
+                      className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition group-hover:opacity-100" data-testid={`remove-photo-${i}`}>
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </Card>
       </div>
 

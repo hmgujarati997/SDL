@@ -136,16 +136,39 @@ export default function OrderDetail() {
                 <input type="file" className="hidden" data-testid="detail-file-upload" onChange={(e) => uploadFile(e, user.role === "designer" ? "designer" : user.role === "dentist" ? "dentist" : "internal")} />
               </label>
             </div>
-            {o.files.length === 0 ? <p className="py-4 text-center text-sm text-brand-taupe">No files uploaded.</p> : (
-              <div className="space-y-2">
-                {o.files.map((f) => (
-                  <div key={f.id} className="flex items-center justify-between rounded-lg border border-brand-taupe/15 p-2.5 text-sm">
-                    <div className="min-w-0"><p className="truncate font-medium">{f.filename}</p><p className="text-xs text-brand-taupe">{f.uploaded_by_role} · {(f.size / 1048576).toFixed(1)}MB · {f.category}</p></div>
-                    <button onClick={() => dl(`/files/${f.id}/download`)} className="text-brand-red"><Download className="h-4 w-4" /></button>
-                  </div>
-                ))}
-              </div>
-            )}
+            {(() => {
+              const isImg = (f) => f.category === "photo" || /\.(jpe?g|png|webp)$/i.test(f.filename || "");
+              const imgs = o.files.filter(isImg);
+              const docs = o.files.filter((f) => !isImg(f));
+              if (o.files.length === 0) return <p className="py-4 text-center text-sm text-brand-taupe">No files uploaded.</p>;
+              return (
+                <>
+                  {imgs.length > 0 && (
+                    <div className="mb-3">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-brand-taupe">Photos</p>
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                        {imgs.map((f) => (
+                          <a key={f.id} href={`${API}/files/${f.id}/download`} target="_blank" rel="noreferrer"
+                            className="group relative aspect-square overflow-hidden rounded-lg border border-brand-taupe/20" data-testid={`photo-thumb-${f.id}`} title={f.filename}>
+                            <img src={`${API}/files/${f.id}/download`} alt={f.filename} className="h-full w-full object-cover transition group-hover:scale-105" loading="lazy" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {docs.length > 0 && (
+                    <div className="space-y-2">
+                      {docs.map((f) => (
+                        <div key={f.id} className="flex items-center justify-between rounded-lg border border-brand-taupe/15 p-2.5 text-sm">
+                          <div className="min-w-0"><p className="truncate font-medium">{f.filename}</p><p className="text-xs text-brand-taupe">{f.uploaded_by_role} · {(f.size / 1048576).toFixed(1)}MB · {f.category}</p></div>
+                          <button onClick={() => dl(`/files/${f.id}/download`)} className="text-brand-red"><Download className="h-4 w-4" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </Card>
 
           {/* Activity log */}
