@@ -720,18 +720,32 @@ async def dispatch_label(bid: str, size: str = "4x6", user: dict = Depends(requi
     disp = await db.dispatch_details.find_one({"batch_id": bid}, {"_id": 0}) or {}
     teeth = ", ".join(str(t["tooth"]) for it in items for t in it.get("teeth", []))
     public = os.environ.get("APP_PUBLIC_URL", "")
+    lab = (await get_setting("lab", {})) or {}
+    d = dent or {}
+    recv_addr = batch.get("delivery_address") or d.get("delivery_address") or d.get("clinic_address") or d.get("billing_address") or ""
+    city_line = ", ".join([x for x in [d.get("city", ""), d.get("state", ""), d.get("pincode", "")] if x])
     label = {
         "order_no": batch["batch_no"],
         "patient_names": ", ".join(c["patient_name"] for c in cases),
-        "teeth": teeth, "dentist_name": batch["dentist_name"], "clinic_name": batch.get("clinic_name", ""),
-        "delivery_address": batch.get("delivery_address", ""), "contact": (dent or {}).get("mobile", ""),
+        "teeth": teeth,
+        "sender": {
+            "name": lab.get("name", "Shree Dental Lab"),
+            "address": lab.get("address", ""),
+            "state": lab.get("state", ""),
+            "phone": lab.get("phone", ""),
+        },
+        "receiver": {
+            "name": batch["dentist_name"],
+            "clinic": batch.get("clinic_name", ""),
+            "address": recv_addr,
+            "city_line": city_line,
+            "phone": d.get("mobile", ""),
+        },
         "courier_name": disp.get("courier_name", ""), "tracking_no": disp.get("tracking_no", ""),
         "packed_by": disp.get("packed_by", user["name"]),
         "track_url": f"{public}/orders/{batch['batch_no']}",
     }
     pdf = dispatch_label_pdf(label, size=size)
-    if size == "Packed / Dispatch Label Printed":
-        pass
     await log_activity(bid, "Dispatch label printed", user)
     return Response(content=pdf, media_type="application/pdf",
                     headers={"Content-Disposition": f'inline; filename="label_{batch["batch_no"]}.pdf"'})
