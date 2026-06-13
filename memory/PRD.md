@@ -73,3 +73,13 @@ Backend 23/23 pytest PASSED. No critical/UI bugs. Mock: Razorpay payments, Whats
   couriered (dispatched). All other status changes still create in-app notifications, no WhatsApp.
 - Verified: backend curl (CRUD + core protection + in-use delete block + invalid-status reject) and
   testing_agent frontend 10/10 PASS (iteration_3.json).
+
+## Designer workflow (2026-06-12)
+- Designers see ONLY order number + files (no patient/dentist/pricing/timeline). Backend: GET /designer/orders
+  (minimal projection), GET /designer/orders/{id} (assigned-only), and GET /orders/{id} returns the minimal
+  designer view for role=designer; unassigned -> 403. Designers cannot update status (removed from update_status roles).
+- Designer pages: pages/designer/DesignerOrders.jsx (assignment list) + DesignerOrderDetail.jsx (download clinic files,
+  upload design via category 'design'). App.js routes designer role to these; Layout designer nav = only 'My Assignments'.
+- On design upload: batch.design_submitted=true + all admins notified ('Design uploaded'). Admin OrderDetail shows a green
+  'design-submitted-banner' to review; admin sets status 'Design Received' (clears flag). Reassigning a designer resets the flag.
+- Verified: backend curl + testing_agent 7/7 PASS (iteration_4.json). NOTE: reset designer@shreedentallab.com password to password123.

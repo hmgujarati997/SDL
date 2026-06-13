@@ -11,10 +11,17 @@ const isImg = (f) => f.category === "photo" || /\.(jpe?g|png|webp)$/i.test(f.fil
 export default function DesignerOrderDetail() {
   const { id } = useParams();
   const [o, setO] = useState(null);
+  const [err, setErr] = useState("");
   const [uploading, setUploading] = useState(false);
 
-  const load = () => api.get(`/designer/orders/${id}`).then(({ data }) => setO(data)).catch(() => {});
+  const load = () => api.get(`/designer/orders/${id}`).then(({ data }) => setO(data)).catch((e) => setErr(formatApiError(e.response?.data?.detail) || "You don't have access to this case."));
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  if (err) return (
+    <div className="mx-auto max-w-3xl">
+      <Link to="/app" className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-taupe hover:text-brand-red"><ChevronLeft className="h-4 w-4" />Back to assignments</Link>
+      <Card><p className="py-10 text-center text-sm text-brand-graphite" data-testid="designer-error">{err}</p></Card>
+    </div>
+  );
   if (!o) return <Spinner />;
 
   const inputFiles = o.files.filter((f) => f.category !== "design" && !isImg(f));
@@ -25,15 +32,16 @@ export default function DesignerOrderDetail() {
     const list = Array.from(e.target.files || []);
     if (!list.length) return;
     setUploading(true);
-    try {
-      for (const f of list) {
-        const fd = new FormData();
-        fd.append("file", f); fd.append("level", "batch"); fd.append("category", "design");
-        await api.post(`/orders/${o.id}/files`, fd);
-      }
-      toast.success("Design uploaded — admin will review it");
-      load();
-    } catch (err) { toast.error(formatApiError(err.response?.data?.detail)); }
+    let ok = 0; const failed = [];
+    for (const f of list) {
+      const fd = new FormData();
+      fd.append("file", f); fd.append("level", "batch"); fd.append("category", "design");
+      try { await api.post(`/orders/${o.id}/files`, fd); ok += 1; }
+      catch (err) { failed.push(f.name); }
+    }
+    if (ok) toast.success(`${ok} design file${ok > 1 ? "s" : ""} uploaded — admin will review`);
+    if (failed.length) toast.error(`Could not upload: ${failed.join(", ")}`);
+    load();
     setUploading(false);
     e.target.value = "";
   };
