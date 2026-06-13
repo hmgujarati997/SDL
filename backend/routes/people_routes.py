@@ -280,21 +280,70 @@ async def admin_dashboard(user: dict = Depends(require_roles("admin", "employee"
 
 
 # ---------- Reports ----------
+def _in_range(created_at, from_date, to_date):
+    if not created_at:
+        return False
+    day = str(created_at)[:10]
+    if from_date and day < from_date:
+        return False
+    if to_date and day > to_date:
+        return False
+    return True
+
+
 @router.get("/reports/summary")
-async def reports_summary(user: dict = Depends(require_roles("admin"))):
-    batches = await db.order_batches.find({}, {"_id": 0}).to_list(5000)
+async def reports_summary(from_date: Optional[str] = None, to_date: Optional[str] = None,
+                          user: dict = Depends(require_roles("admin"))):
+    all_batches = await db.order_batches.find({}, {"_id": 0}).to_list(5000)
+    batches = [b for b in all_batches if _in_range(b.get("created_at"), from_date, to_date)]
     by_status, by_dentist = {}, {}
     total_discount = 0
     for b in batches:
         by_status[b["status"]] = by_status.get(b["status"], 0) + 1
         by_dentist[b["dentist_name"]] = by_dentist.get(b["dentist_name"], 0) + 1
         total_discount += b.get("pricing", {}).get("total_discount", 0)
-    invoices = await db.invoices.find({}, {"_id": 0}).to_list(5000)
+    all_invoices = await db.invoices.find({}, {"_id": 0}).to_list(5000)
+    invoices = [i for i in all_invoices if _in_range(i.get("created_at"), from_date, to_date)]
     paid = sum(i.get("paid", 0) for i in invoices)
     pending = sum(i.get("pending", 0) for i in invoices)
+    revenue = sum(b.get("amounts", {}).get("total", 0) for b in batches)
     return {
         "by_status": by_status, "by_dentist": by_dentist,
         "total_offer_discount": round(total_discount, 2),
         "invoice_paid": round(paid, 2), "invoice_pending": round(pending, 2),
+        "total_revenue": round(revenue, 2),
         "total_orders": len(batches), "total_invoices": len(invoices),
+        "from_date": from_date, "to_date": to_date,
     }
+
+
+@router.get("/reports/export")
+async def reports_export(from_date: Optional[str] = None, to_date: Optional[str] = None,
+                         user: dict = Depends(require_roles("admin"))):
+    import csv as _csv
+    import io
+    from fastapi.responses import StreamingResponse
+
+    all_batches = await db.order_batches.find({}, {"_id": 0}).sort("created_at", 1).to_list(5000)
+    batches = [b for b in all_batches if _in_range(b.get("created_at"), from_date, to_date)]
+
+    buf = io.StringIO()
+    w = _csv.writer(buf)
+    w.writerow(["Order No", "Date", "Dentist", "Clinic", "Status", "Units",
+                "Subtotal", "Discount", "GST", "Total", "Paid", "Pending", "Payment Status"])
+    for b in batches:
+        pr = b.get("pricing", {}) or {}
+        am = b.get("amounts", {}) or {}
+        units = sum(li.get("units", 0) for li in pr.get("line_items", []))
+        w.writerow([
+            b.get("batch_no", ""), str(b.get("created_at", ""))[:10],
+            b.get("dentist_name", ""), b.get("clinic_name", ""), b.get("status", ""),
+            units, pr.get("subtotal", 0), pr.get("total_discount", 0),
+            pr.get("gst_total", 0), am.get("total", 0), am.get("paid", 0),
+            am.get("pending", 0), am.get("status", ""),
+        ])
+
+    buf.seek(0)
+    label = f"{from_date or 'all'}_to_{to_date or 'all'}"
+    headers = {"Content-Disposition": f'attachment; filename="report_{label}.csv"'}
+    return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv", headers=headers)
