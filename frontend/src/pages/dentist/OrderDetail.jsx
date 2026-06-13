@@ -350,7 +350,7 @@ function DispatchBlock({ order, onDone, dl, act }) {
         <input className={inputCls} placeholder="Tracking number" value={f.tracking_no} onChange={(e) => setF({ ...f, tracking_no: e.target.value })} data-testid="tracking-no" />
         <Btn data-testid="dispatch-btn" className="w-full" onClick={() => act(() => api.post(`/orders/${order.id}/dispatch`, f), "Dispatched")}>Mark Dispatched</Btn>
         <div className="flex gap-2">
-          <Btn variant="outline" className="flex-1" onClick={() => dl(`/orders/${order.id}/dispatch-label?size=4x3`)}><Printer className="h-4 w-4" />4×3 Label</Btn>
+          <Btn variant="outline" className="flex-1" onClick={() => dl(`/orders/${order.id}/dispatch-label?size=4x4`)}><Printer className="h-4 w-4" />4×4 Label</Btn>
           <Btn variant="outline" className="flex-1" onClick={() => dl(`/orders/${order.id}/dispatch-label?size=A4`)}>A4</Btn>
         </div>
       </div>

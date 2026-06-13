@@ -710,7 +710,7 @@ async def dispatch(bid: str, body: dict = Body(...), user: dict = Depends(requir
 
 
 @router.get("/orders/{bid}/dispatch-label")
-async def dispatch_label(bid: str, size: str = "4x6", user: dict = Depends(require_roles("admin", "employee"))):
+async def dispatch_label(bid: str, size: str = "4x4", user: dict = Depends(require_roles("admin", "employee"))):
     batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
     if not batch:
         raise HTTPException(404, "Order not found")
