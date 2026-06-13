@@ -4,10 +4,10 @@ import api, { API, inr, fmtDate, formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Card, Btn, Field, inputCls } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
-import { StatusBadge, PayBadge } from "@/components/StatusBadge";
+import { StatusBadge } from "@/components/StatusBadge";
 import { toast } from "sonner";
 import {
-  Upload, Download, FileText, Truck, Wallet, MessageSquare, History, CheckCircle2,
+  Upload, Download, FileText, Truck, MessageSquare, History, CheckCircle2,
   AlertTriangle, UserCog, Printer, RotateCcw, Package, ChevronLeft,
 } from "lucide-react";
 
@@ -52,7 +52,15 @@ export default function OrderDetail() {
           </div>
           <p className="mt-1 text-sm text-brand-taupe">{o.dentist_name} · {o.clinic_name} · {fmtDate(o.created_at)}</p>
         </div>
-        <div className="flex items-center gap-2"><StatusBadge status={o.status} /><PayBadge status={o.amounts.status} /></div>
+        <div className="flex items-center gap-2">
+          <StatusBadge status={o.status} />
+          {(o.amounts.status === "Paid" || o.amounts.paid >= o.amounts.total) && o.amounts.total > 0 && (
+            <span className="inline-flex items-center rounded-full border border-green-200 bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800">Paid</span>
+          )}
+          {o.amounts.status === "Free Remake" && (
+            <span className="inline-flex items-center rounded-full border border-brand-gold/30 bg-brand-gold/15 px-2.5 py-0.5 text-xs font-semibold text-[#8a6d2f]">Free Remake</span>
+          )}
+        </div>
       </div>
 
       {o.file_issue && (
@@ -115,8 +123,7 @@ export default function OrderDetail() {
               {p.total_discount > 0 && <Row l="Offer Discount" v={"−" + inr(p.total_discount)} gold />}
               {p.gst_enabled && <Row l="GST" v={inr(p.gst_total)} />}
               <div className="flex justify-between pt-1 font-bold"><span>Total</span><span className="text-brand-red">{inr(o.amounts.total)}</span></div>
-              <Row l="Paid" v={inr(o.amounts.paid)} />
-              <Row l="Pending" v={inr(o.amounts.pending)} />
+              {o.amounts.total > 0 && o.amounts.status !== "Free Remake" && <Row l="Paid" v={inr(o.amounts.paid)} />}
             </div>
           </Card>
 
@@ -160,7 +167,6 @@ export default function OrderDetail() {
             <Card>
               <h3 className="mb-3 font-heading text-lg font-bold">Actions</h3>
               <div className="space-y-2">
-                {o.amounts.pending > 0 && o.amounts.status !== "Free Remake" && <PayButton order={o} onDone={load} />}
                 {o.invoices?.[0] && <Btn variant="outline" className="w-full" onClick={() => dl(`/invoices/${o.invoices[0].id}/pdf`)}><FileText className="h-4 w-4" />Download Invoice</Btn>}
                 {o.status === "Order Received" && <Btn variant="outline" className="w-full" onClick={() => act(() => api.post(`/orders/${o.id}/cancel`, { reason: "Dentist cancelled" }), "Cancelled")}>Cancel Order</Btn>}
                 {o.status === "Delivered" && <RemakeButton order={o} reasons={meta.remake_reasons} onDone={load} />}
@@ -198,7 +204,6 @@ export default function OrderDetail() {
                 {o.invoices?.[0] && <Btn variant="ghost" className="mt-2 w-full" onClick={() => dl(`/invoices/${o.invoices[0].id}/pdf`)}>Download PDF ({o.invoices[0].invoice_no})</Btn>}
               </Card>
               <DispatchBlock order={o} onDone={load} dl={dl} act={act} />
-              <PaymentBlock order={o} onDone={load} />
               {o.remakes?.length > 0 && <Card><h3 className="mb-2 font-heading font-bold">Remake Orders</h3>{o.remakes.map((r) => <Link key={r.id} to={`/app/orders/${r.id}`} className="block text-sm font-semibold text-brand-red">{r.batch_no}</Link>)}</Card>}
             </>
           )}
@@ -222,21 +227,6 @@ export default function OrderDetail() {
 }
 
 function Row({ l, v, gold }) { return <div className={`flex justify-between ${gold ? "text-[#8a6d2f]" : ""}`}><span className="text-brand-taupe">{l}</span><span className="tabular font-medium">{v}</span></div>; }
-
-function PayButton({ order, onDone }) {
-  const [loading, setLoading] = useState(false);
-  const pay = async () => {
-    setLoading(true);
-    try {
-      const { data } = await api.post(`/orders/${order.id}/payment/create`, {});
-      await api.post(`/payments/${data.payment.id}/verify`, { razorpay_payment_id: "pay_mock" });
-      toast.success(data.mock_message ? "Payment recorded (mock mode)" : "Payment successful");
-      onDone();
-    } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); }
-    finally { setLoading(false); }
-  };
-  return <Btn data-testid="pay-now-btn" className="w-full" onClick={pay} disabled={loading}><Wallet className="h-4 w-4" />{loading ? "Processing..." : `Pay ${inr(order.amounts.pending)}`}</Btn>;
-}
 
 function StatusUpdater({ order, statuses, onDone }) {
   const [s, setS] = useState(order.status);
@@ -308,20 +298,6 @@ function DispatchBlock({ order, onDone, dl, act }) {
           <Btn variant="outline" className="flex-1" onClick={() => dl(`/orders/${order.id}/dispatch-label?size=4x6`)}><Printer className="h-4 w-4" />4×6 Label</Btn>
           <Btn variant="outline" className="flex-1" onClick={() => dl(`/orders/${order.id}/dispatch-label?size=A4`)}>A4</Btn>
         </div>
-      </div>
-    </Card>
-  );
-}
-
-function PaymentBlock({ order, onDone }) {
-  const [paid, setPaid] = useState(order.amounts.paid);
-  return (
-    <Card>
-      <h3 className="mb-3 flex items-center gap-2 font-heading text-lg font-bold"><Wallet className="h-5 w-5 text-brand-red" />Payment</h3>
-      <Btn variant="outline" className="mb-2 w-full" onClick={async () => { try { await api.post(`/orders/${order.id}/payment/request`, {}); toast.success("Payment requested"); onDone(); } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); } }}>Send Payment Request</Btn>
-      <div className="flex gap-2">
-        <input type="number" className={inputCls} value={paid} onChange={(e) => setPaid(e.target.value)} />
-        <Btn variant="dark" onClick={async () => { try { await api.post(`/orders/${order.id}/payment/manual`, { paid: Number(paid) }); toast.success("Updated"); onDone(); } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); } }}>Set Paid</Btn>
       </div>
     </Card>
   );

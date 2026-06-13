@@ -36,7 +36,6 @@ export default function DentistDashboard() {
         <StatCard label="In Manufacturing" value={d.in_manufacturing} icon={Factory} accent="charcoal" />
         <StatCard label="Ready / Dispatch" value={d.ready + d.dispatched} icon={Truck} accent="gold" />
         <StatCard label="Delivered" value={d.delivered} icon={CheckCircle2} accent="green" />
-        <StatCard testid="stat-pending-payment" label="Pending Payment" value={inr(d.pending_payment)} icon={Wallet} accent="red" />
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-3">

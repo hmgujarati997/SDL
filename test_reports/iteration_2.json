@@ -1,0 +1,30 @@
+{
+  "summary": "PAY-UPFRONT flow verified end-to-end via Playwright. Dentist login → New Order build (existing patient, 1 product, 1 tier, 2 FDI teeth 11/12) → submit button reads 'Pay & Place Order · ₹1,171.80' → in MOCK mode the frontend auto-finalizes (POST /orders/checkout then POST /orders with mock razorpay_* fields) → success toast 'Payment successful · Order SDL-... placed!' → nav to order detail (SDL-2026-0008). On the created order: green 'Paid' badge visible next to status; Price Breakup shows Subtotal / Offer Discount / GST / Total / Paid (no 'Pending' row); no Pay / Pay now button on dentist view. Dentist Dashboard has no 'Pending Payment' StatCard. Dentist Invoices table headers = ['INVOICE NO','ORDER','DATE','TOTAL','ACTION'] (no Pending column, no Partially Paid badge). Admin Dashboard has no 'Pending Payments' card. Admin order detail shows Manage/Invoice/Dispatch blocks and does NOT show 'Send Payment Request' or 'Set Paid' controls. All 9 requested verifications PASS.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dentist Dashboard", "issues": ["A 'Pending' StatCard (testid='stat-pending') still exists – verified as Pending ORDER count (not pending payment), so it's compliant with the spec but the label could be made more explicit (e.g. 'Pending Orders') to avoid any confusion now that payment-pending is gone."]},
+      {"screen": "Admin Dashboard", "issues": ["'Pending Acceptance' StatCard remains (orders pending acceptance) – also compliant; label refers to order status not payment."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "NewOrder.submit() calls POST /orders/checkout, then in mock mode (chk.mock===true) calls finalizeOrder() with razorpay_signature='mock' — matches backend's 402-on-missing-payment contract.",
+    "OrderDetail no longer renders a PayButton for dentists and no PaymentBlock (Send Payment Request / Set Paid) for admins. Confirmed by code inspection and live UI.",
+    "Price Breakup intentionally hides Paid row when total==0 OR status==='Free Remake' — good (free remake path will still skip the Paid line, no Pending shown).",
+    "Paid pill in OrderDetail header uses dual guard: (amounts.status==='Paid' OR amounts.paid>=amounts.total) AND amounts.total>0 — robust against missing status field.",
+    "Invoices.jsx columns reduced to {Invoice No, Order, Date, Total, Action} — matches spec.",
+    "DentistDashboard removed payment StatCard but the remaining 'Pending' card still uses generic label — minor wording polish opportunity (non-blocking)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not retested (skipped per request; previous iteration 100%)", "frontend": "100% (9/9 spec checks passed)"},
+  "test_credentials": "Dentist: dr.sharma@example.com/password123 worked. Admin: changeme123 worked then forced change-password; admin password is now ChangeMe@2026! after this run (matches prev iteration note).",
+  "seed_data_creation": "Created one new order SDL-2026-0008 via the live PAY-UPFRONT mock flow (Zirconia Crown / Zirconia Monolithic, teeth 11+12, total ₹1,171.80, paid=1,171.80, status='Order Received', amounts.status='Paid'). No teardown done (low volume).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The PAY-UPFRONT pivot is fully wired and working. New order SDL-2026-0008 exists with Paid=Total. Admin password is ChangeMe@2026!. If real Razorpay keys get added in Settings later, the mock branch in NewOrder.submit() (chk.mock===true) will be bypassed and the real Razorpay popup will open — that path was NOT exercised in this run (no live keys). Old endpoints (payment/request, payment/create, payments/{id}/verify, payment/manual) were confirmed removed via backend curl in the previous iteration.",
+  "rca of the issue": "N/A – no defects found. The 'Pay & Place Order' upfront flow, removal of pending-payment UI, and admin payment controls all match the spec."
+}

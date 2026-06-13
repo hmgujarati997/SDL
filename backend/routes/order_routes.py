@@ -11,6 +11,7 @@ from deps import (db, gen_id, now_iso, fmt_ist, get_current_user, require_roles,
 from constants import ALLOWED_FILE_EXT, ZIRCONIA_STAGES, ALL_STATUSES
 from engine import compute_quote
 from services import send_whatsapp, invoice_pdf, dispatch_label_pdf
+import razorpay as _razorpay
 
 router = APIRouter(tags=["orders"])
 
@@ -89,6 +90,9 @@ class OrderIn(BaseModel):
     impression_method: Optional[str] = None  # courier / pickup
     cases: List[CaseIn]
     client_token: Optional[str] = None
+    razorpay_order_id: Optional[str] = None
+    razorpay_payment_id: Optional[str] = None
+    razorpay_signature: Optional[str] = None
 
 
 async def _next_batch_no():
@@ -102,6 +106,86 @@ async def _next_batch_no():
         except Exception:
             n = await db.order_batches.count_documents({}) + 1
     return f"{prefix}{n:04d}"
+
+
+def _quote_items_from_body(body):
+    out = []
+    for c in body.cases:
+        pname = (c.new_patient or {}).get("name", "") if c.new_patient else ""
+        for it in c.items:
+            units = it.units or len(it.teeth)
+            out.append({"tier_id": it.tier_id, "product_id": it.product_id,
+                        "product_name": it.product_name, "tier_name": it.tier_name,
+                        "units": units, "teeth": it.teeth, "patient_name": pname})
+    return out
+
+
+async def _resolve_quote(items_for_quote, dent, urgency):
+    tier_ids = list({i["tier_id"] for i in items_for_quote})
+    tiers = await db.product_tiers.find({"id": {"$in": tier_ids}}, {"_id": 0}).to_list(100)
+    tiers_by_id = {t["id"]: t for t in tiers}
+    rates_rows = await db.dentist_product_pricing.find({"dentist_id": dent["id"]}, {"_id": 0}).to_list(200)
+    rates = {r["tier_id"]: r["rate"] for r in rates_rows}
+    offers = await db.offers.find({"active": True}, {"_id": 0}).to_list(100)
+    gst_cfg = await get_setting("gst", {"enabled": True})
+    offers_enabled = await get_setting("offers_enabled", True)
+    intra = dent.get("state", "").strip().lower() == "gujarat"
+    return compute_quote(items_for_quote, tiers_by_id, rates, offers, urgency,
+                         gst_cfg.get("enabled", True), intra, offers_enabled)
+
+
+async def _rp_config():
+    rp = await get_setting("razorpay", {}) or {}
+    enabled = bool(rp.get("enabled") and rp.get("key_id") and rp.get("key_secret"))
+    return rp, enabled
+
+
+async def _create_rp_order(amount_inr, receipt):
+    rp, enabled = await _rp_config()
+    if not enabled:
+        return {"id": "order_mock_" + gen_id()[:12], "mock": True, "key_id": rp.get("key_id", "")}
+    client = _razorpay.Client(auth=(rp["key_id"], rp["key_secret"]))
+    order = client.order.create({
+        "amount": int(round(amount_inr * 100)), "currency": "INR",
+        "payment_capture": 1, "receipt": receipt[:40]})
+    return {"id": order["id"], "mock": False, "key_id": rp["key_id"]}
+
+
+async def _verify_rp(order_id, payment_id, signature):
+    rp, enabled = await _rp_config()
+    if not enabled:
+        # Mock mode: accept simulated payments
+        return str(order_id).startswith("order_mock_")
+    client = _razorpay.Client(auth=(rp["key_id"], rp["key_secret"]))
+    try:
+        client.utility.verify_payment_signature({
+            "razorpay_order_id": order_id,
+            "razorpay_payment_id": payment_id,
+            "razorpay_signature": signature})
+        return True
+    except Exception:
+        return False
+
+
+@router.post("/orders/checkout")
+async def order_checkout(body: OrderIn, user: dict = Depends(require_roles("dentist"))):
+    dent = await db.dentists.find_one({"user_id": user["id"]}, {"_id": 0})
+    if not dent:
+        raise HTTPException(400, "Profile not found")
+    if not dent.get("billing_complete"):
+        raise HTTPException(400, "Please complete your billing profile before placing an order.")
+    items = _quote_items_from_body(body)
+    if not items:
+        raise HTTPException(400, "Add at least one item before checkout.")
+    quote = await _resolve_quote(items, dent, body.urgency)
+    total = round(quote["total"], 2)
+    rp = await _create_rp_order(total, "chk_" + gen_id()[:12])
+    return {
+        "amount": total, "currency": "INR",
+        "razorpay_order_id": rp["id"], "key_id": rp["key_id"], "mock": rp["mock"],
+        "prefill": {"name": dent.get("name", ""), "email": dent.get("email", ""),
+                    "contact": dent.get("mobile", "")},
+    }
 
 
 @router.post("/orders")
@@ -159,17 +243,19 @@ async def create_order(body: OrderIn, user: dict = Depends(require_roles("dentis
                 "tier_name": it.tier_name, "units": units, "teeth": it.teeth, "patient_name": pname})
 
     # pricing
-    tier_ids = list({i["tier_id"] for i in all_items_for_quote})
-    tiers = await db.product_tiers.find({"id": {"$in": tier_ids}}, {"_id": 0}).to_list(100)
-    tiers_by_id = {t["id"]: t for t in tiers}
-    rates_rows = await db.dentist_product_pricing.find({"dentist_id": dent["id"]}, {"_id": 0}).to_list(200)
-    rates = {r["tier_id"]: r["rate"] for r in rates_rows}
-    offers = await db.offers.find({"active": True}, {"_id": 0}).to_list(100)
-    gst_cfg = await get_setting("gst", {"enabled": True})
-    offers_enabled = await get_setting("offers_enabled", True)
-    intra = dent.get("state", "").strip().lower() == "gujarat"
-    quote = compute_quote(all_items_for_quote, tiers_by_id, rates, offers, body.urgency,
-                          gst_cfg.get("enabled", True), intra, offers_enabled)
+    quote = await _resolve_quote(all_items_for_quote, dent, body.urgency)
+
+    # ---- Payment-first enforcement ----
+    total = round(quote["total"], 2)
+    paid_ok = False
+    if total > 0:
+        if not body.razorpay_order_id or not body.razorpay_payment_id:
+            raise HTTPException(402, "Payment is required before placing the order.")
+        verified = await _verify_rp(body.razorpay_order_id, body.razorpay_payment_id,
+                                    body.razorpay_signature or "")
+        if not verified:
+            raise HTTPException(400, "Payment could not be verified. Your order was not placed.")
+        paid_ok = True
 
     status = "Impression Awaited" if is_impression else "Order Received"
     batch = {
@@ -179,12 +265,19 @@ async def create_order(body: OrderIn, user: dict = Depends(require_roles("dentis
         "pickup_required": body.pickup_required, "delivery_required": body.delivery_required,
         "delivery_address": body.delivery_address or dent.get("delivery_address", ""),
         "notes": body.notes, "is_impression": is_impression, "pricing": quote,
-        "amounts": {"total": quote["total"], "paid": 0, "pending": quote["total"], "status": "Unpaid"},
+        "amounts": {"total": total, "paid": total if paid_ok else 0, "pending": 0,
+                    "status": "Paid" if paid_ok else "Unpaid"},
         "is_remake": False, "parent_id": None, "remake_index": 0, "designer_id": None,
         "file_issue": None, "expected_delivery": None, "client_token": body.client_token,
         "created_at": now_iso(), "updated_at": now_iso(),
     }
     await db.order_batches.insert_one(batch)
+    if paid_ok:
+        await db.payments.insert_one({
+            "id": gen_id(), "order_id": bid, "order_no": batch_no, "amount": total,
+            "status": "Paid", "method": "razorpay", "razorpay_order_id": body.razorpay_order_id,
+            "razorpay_payment_id": body.razorpay_payment_id, "created_at": now_iso(),
+            "paid_at": now_iso(), "mock": str(body.razorpay_order_id).startswith("order_mock_")})
     for c in cases_docs:
         await db.order_cases.insert_one(c)
     for it in items_docs:
@@ -690,74 +783,6 @@ async def list_invoices(user: dict = Depends(get_current_user)):
     return await db.invoices.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
 
 
-# ---------------- Payments (Razorpay - configurable/mock) ----------------
-@router.post("/orders/{bid}/payment/request")
-async def payment_request(bid: str, body: dict = Body(default={}), user: dict = Depends(require_roles("admin"))):
-    batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
-    amount = body.get("amount", batch["amounts"]["pending"])
-    await db.order_batches.update_one({"id": bid}, {"$set": {"amounts.status": "Payment Requested"}})
-    await log_activity(bid, f"Payment requested: Rs.{amount}", user, dentist_visible=True)
-    await notify(batch, "payment_request",
-                 f5("A payment request has been generated.", f"Order No: {batch['batch_no']}",
-                    f"Amount: Rs.{amount}", "Payment Status: Pending",
-                    "Please complete payment from the order page."),
-                 title="Payment request", body=f"{batch['batch_no']}: Rs.{amount} requested")
-    return {"ok": True}
-
-
-@router.post("/orders/{bid}/payment/create")
-async def create_payment(bid: str, body: dict = Body(default={}), user: dict = Depends(require_roles("dentist"))):
-    batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
-    if not batch:
-        raise HTTPException(404, "Order not found")
-    rp = await get_setting("razorpay", {})
-    amount = float(body.get("amount", batch["amounts"]["pending"]))
-    pay = {"id": gen_id(), "order_id": bid, "order_no": batch["batch_no"], "amount": amount,
-           "status": "Created", "method": "razorpay", "razorpay_order_id": "order_" + gen_id()[:12],
-           "razorpay_payment_id": None, "created_at": now_iso(), "mock": not rp.get("enabled")}
-    await db.payments.insert_one(pay)
-    pay.pop("_id", None)
-    return {"payment": pay, "razorpay_enabled": rp.get("enabled", False),
-            "key_id": rp.get("key_id", ""), "amount": amount,
-            "mock_message": None if rp.get("enabled") else "Razorpay not configured - using mock payment flow."}
-
-
-@router.post("/payments/{pid}/verify")
-async def verify_payment(pid: str, body: dict = Body(default={}), user: dict = Depends(require_roles("dentist"))):
-    pay = await db.payments.find_one({"id": pid}, {"_id": 0})
-    if not pay:
-        raise HTTPException(404, "Payment not found")
-    # In mock mode mark success. Real mode would verify signature here.
-    await db.payments.update_one({"id": pid}, {"$set": {
-        "status": "Paid", "razorpay_payment_id": body.get("razorpay_payment_id", "pay_" + gen_id()[:12]),
-        "paid_at": now_iso()}})
-    batch = await db.order_batches.find_one({"id": pay["order_id"]}, {"_id": 0})
-    new_paid = batch["amounts"]["paid"] + pay["amount"]
-    pending = max(0, batch["amounts"]["total"] - new_paid)
-    status = "Paid" if pending <= 0 else "Partially Paid"
-    await db.order_batches.update_one({"id": pay["order_id"]}, {"$set": {
-        "amounts.paid": new_paid, "amounts.pending": pending, "amounts.status": status}})
-    await db.invoices.update_one({"order_id": pay["order_id"]}, {"$set": {"paid": new_paid, "pending": pending}})
-    await log_activity(pay["order_id"], f"Payment received Rs.{pay['amount']}", user, dentist_visible=True)
-    await notify(batch, "payment_success",
-                 f5("Payment received successfully.", f"Order No: {batch['batch_no']}",
-                    f"Amount Paid: Rs.{pay['amount']}", f"Payment Status: {status}",
-                    "Your order will continue in production."),
-                 title="Payment success", body=f"{batch['batch_no']}: Rs.{pay['amount']} paid")
-    return {"ok": True, "status": status}
-
-
-@router.post("/orders/{bid}/payment/manual")
-async def manual_payment(bid: str, body: dict = Body(...), user: dict = Depends(require_roles("admin"))):
-    batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
-    paid = float(body.get("paid", 0))
-    pending = max(0, batch["amounts"]["total"] - paid)
-    status = body.get("status") or ("Paid" if pending <= 0 else ("Partially Paid" if paid > 0 else "Unpaid"))
-    await db.order_batches.update_one({"id": bid}, {"$set": {
-        "amounts.paid": paid, "amounts.pending": pending, "amounts.status": status}})
-    await db.invoices.update_one({"order_id": bid}, {"$set": {"paid": paid, "pending": pending}})
-    await db.payments.insert_one({"id": gen_id(), "order_id": bid, "order_no": batch["batch_no"],
-                                  "amount": paid, "status": status, "method": "offline",
-                                  "created_at": now_iso()})
-    await log_activity(bid, f"Payment updated (manual): {status} Rs.{paid}", user, dentist_visible=True)
-    return {"ok": True, "status": status}
+# ---------------- Payments ----------------
+# Payment is collected upfront via Razorpay at order placement (see /orders/checkout
+# and the verification inside create_order). No pending/partial/manual payment flow.

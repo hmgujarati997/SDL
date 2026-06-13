@@ -23,7 +23,6 @@ export default function AdminDashboard() {
         <StatCard label="Delivered" value={d.delivered} icon={CheckCircle2} accent="green" />
         <StatCard label="Remakes" value={d.remakes} icon={RotateCcw} accent="red" />
         <StatCard label="Overdue" value={d.overdue} icon={Clock} accent="red" />
-        <StatCard label="Pending Payments" value={inr(d.pending_payments)} icon={Wallet} accent="gold" />
         <StatCard label="WhatsApp Failed" value={d.whatsapp_failed} icon={MessageSquare} accent="red" />
       </div>
 

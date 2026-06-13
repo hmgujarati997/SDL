@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import api, { API, inr, fmtDate } from "@/lib/api";
 import { PageHeader, Card } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
-import { PayBadge } from "@/components/StatusBadge";
 import { Download } from "lucide-react";
 
 export default function Invoices() {
@@ -20,7 +19,7 @@ export default function Invoices() {
         <Card className="overflow-x-auto p-0">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-brand-ivory text-left text-xs uppercase tracking-wider text-brand-taupe">
-              <tr><th className="p-4">Invoice No</th><th className="p-4">Order</th><th className="p-4">Date</th><th className="p-4">Total</th><th className="p-4">Pending</th><th className="p-4">Action</th></tr>
+              <tr><th className="p-4">Invoice No</th><th className="p-4">Order</th><th className="p-4">Date</th><th className="p-4">Total</th><th className="p-4">Action</th></tr>
             </thead>
             <tbody>
               {list.map((i) => (
@@ -29,7 +28,6 @@ export default function Invoices() {
                   <td className="p-4">{i.order_no}</td>
                   <td className="p-4">{fmtDate(i.created_at)}</td>
                   <td className="p-4 tabular font-semibold">{inr(i.total)}</td>
-                  <td className="p-4"><PayBadge status={i.pending > 0 ? "Partially Paid" : "Paid"} /></td>
                   <td className="p-4"><button onClick={() => open(i.id)} className="inline-flex items-center gap-1 font-semibold text-brand-red"><Download className="h-4 w-4" />PDF</button></td>
                 </tr>
               ))}

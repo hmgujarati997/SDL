@@ -95,35 +95,77 @@ export default function NewOrder() {
 
   const valid = flatItems.length > 0 && cases.every((c) => (c.mode === "existing" ? c.patient_id : c.new_patient.name));
 
+  const buildPayload = (payment = {}) => ({
+    ...settings,
+    client_token: tokenRef.current,
+    cases: cases.map((c) => ({
+      patient_id: c.mode === "existing" ? c.patient_id : null,
+      new_patient: c.mode === "new" ? { ...c.new_patient, age: c.new_patient.age ? Number(c.new_patient.age) : null } : null,
+      case_input_type: settings.case_input_type, notes: c.notes,
+      items: c.items.filter((it) => it.tier_id && it.teeth.length).map((it) => ({
+        product_id: it.product_id, product_name: tierById[it.tier_id]?.product_name,
+        tier_id: it.tier_id, tier_name: tierById[it.tier_id]?.name, teeth: it.teeth,
+        trial_required: it.trial_required, special_instructions: it.special_instructions, stump_shade: it.stump_shade,
+      })),
+    })),
+    ...payment,
+  });
+
+  const loadRazorpay = () => new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
+
+  const finalizeOrder = async (payment) => {
+    const { data } = await api.post("/orders", buildPayload(payment));
+    for (const f of files) {
+      const fd = new FormData();
+      fd.append("file", f); fd.append("level", "batch"); fd.append("category", "dentist");
+      try { await api.post(`/orders/${data.id}/files`, fd); } catch {}
+    }
+    toast.success(`Payment successful · Order ${data.batch_no} placed!`);
+    nav(`/app/orders/${data.id}`);
+  };
+
   const submit = async () => {
     if (!valid) { toast.error("Add at least one patient with teeth selected."); return; }
     setSubmitting(true);
     try {
-      const payload = {
-        ...settings,
-        client_token: tokenRef.current,
-        cases: cases.map((c) => ({
-          patient_id: c.mode === "existing" ? c.patient_id : null,
-          new_patient: c.mode === "new" ? { ...c.new_patient, age: c.new_patient.age ? Number(c.new_patient.age) : null } : null,
-          case_input_type: settings.case_input_type, notes: c.notes,
-          items: c.items.filter((it) => it.tier_id && it.teeth.length).map((it) => ({
-            product_id: it.product_id, product_name: tierById[it.tier_id]?.product_name,
-            tier_id: it.tier_id, tier_name: tierById[it.tier_id]?.name, teeth: it.teeth,
-            trial_required: it.trial_required, special_instructions: it.special_instructions, stump_shade: it.stump_shade,
-          })),
-        })),
-      };
-      const { data } = await api.post("/orders", payload);
-      // upload files
-      for (const f of files) {
-        const fd = new FormData();
-        fd.append("file", f); fd.append("level", "batch"); fd.append("category", "dentist");
-        try { await api.post(`/orders/${data.id}/files`, fd); } catch {}
+      const { data: chk } = await api.post("/orders/checkout", buildPayload());
+      // Mock mode (Razorpay not configured) — simulate a successful payment
+      if (chk.mock) {
+        await finalizeOrder({ razorpay_order_id: chk.razorpay_order_id, razorpay_payment_id: "pay_mock_" + Date.now(), razorpay_signature: "mock" });
+        return;
       }
-      toast.success(`Order ${data.batch_no} placed!`);
-      nav(`/app/orders/${data.id}`);
-    } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); }
-    finally { setSubmitting(false); }
+      const ok = await loadRazorpay();
+      if (!ok) { toast.error("Could not load the payment gateway. Please retry."); setSubmitting(false); return; }
+      const rzp = new window.Razorpay({
+        key: chk.key_id,
+        amount: Math.round(chk.amount * 100),
+        currency: chk.currency || "INR",
+        name: "Shree Dental Lab",
+        description: `Order payment · ${inr(chk.amount)}`,
+        order_id: chk.razorpay_order_id,
+        prefill: chk.prefill,
+        theme: { color: "#C1272D" },
+        handler: async (resp) => {
+          try {
+            await finalizeOrder({
+              razorpay_order_id: resp.razorpay_order_id,
+              razorpay_payment_id: resp.razorpay_payment_id,
+              razorpay_signature: resp.razorpay_signature,
+            });
+          } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); setSubmitting(false); }
+        },
+        modal: { ondismiss: () => { setSubmitting(false); toast("Payment cancelled — your order was not placed."); } },
+      });
+      rzp.on("payment.failed", () => { setSubmitting(false); toast.error("Payment failed — your order was not placed."); });
+      rzp.open();
+    } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); setSubmitting(false); }
   };
 
   if (loading) return <Spinner />;
@@ -320,8 +362,9 @@ export default function NewOrder() {
               </div>
             )}
             <Btn data-testid="submit-order-btn" className="mt-4 w-full" onClick={submit} disabled={submitting || !valid}>
-              {submitting ? "Placing..." : <>Review & Submit <ChevronRight className="h-4 w-4" /></>}
+              {submitting ? "Processing payment..." : <>Pay &amp; Place Order{quote ? ` · ${inr(quote.total)}` : ""} <ChevronRight className="h-4 w-4" /></>}
             </Btn>
+            {quote && <p className="mt-2 text-center text-xs text-brand-taupe">Secure payment via Razorpay. Your order is placed only after payment.</p>}
           </Card>
         </div>
       </div>
