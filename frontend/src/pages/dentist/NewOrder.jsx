@@ -198,16 +198,9 @@ export default function NewOrder() {
                 <option>Digital Scan Upload</option><option>Physical Impression</option>
               </select>
             </Field>
-            <Field label="Urgency">
-              <select data-testid="urgency-select" className={inputCls} value={settings.urgency} onChange={(e) => setSettings({ ...settings, urgency: e.target.value })}>
-                <option>Normal</option><option>Urgent</option><option>Same-day</option>
-              </select>
-            </Field>
             {impression && (
               <Field label="Impression Delivery">
-                <select className={inputCls} value={settings.impression_method} onChange={(e) => setSettings({ ...settings, impression_method: e.target.value })}>
-                  <option value="courier">Courier to lab</option><option value="pickup">Request lab pickup</option>
-                </select>
+                <div data-testid="impression-delivery" className="rounded-lg border border-brand-taupe/20 bg-brand-ivory px-3 py-2 text-sm text-brand-graphite">Courier to lab</div>
               </Field>
             )}
             <Field label="Delivery Address (from your profile)">
@@ -215,11 +208,7 @@ export default function NewOrder() {
                 {profileAddress || <span className="text-brand-taupe">No address set — add it in your <Link to="/app/profile" className="font-semibold text-brand-red underline">profile</Link>.</span>}
               </div>
             </Field>
-            <div className="flex items-center gap-4 pt-6">
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={settings.pickup_required} onChange={(e) => setSettings({ ...settings, pickup_required: e.target.checked })} /> Pickup required</label>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={settings.delivery_required} onChange={(e) => setSettings({ ...settings, delivery_required: e.target.checked })} /> Delivery required</label>
-            </div>
-            <div className="sm:col-span-2"><Field label="Order Notes"><textarea className={inputCls} rows={2} value={settings.notes} onChange={(e) => setSettings({ ...settings, notes: e.target.value })} /></Field></div>
+            <label className="flex items-center gap-2 pt-6 text-sm"><input type="checkbox" checked={settings.delivery_required} onChange={(e) => setSettings({ ...settings, delivery_required: e.target.checked })} /> Delivery required</label>
           </div>
           {impression && <p className="mt-3 rounded-lg bg-brand-gold/10 p-3 text-xs text-brand-graphite">Physical impression: file upload is optional. You'll get a shipping slip after placing the order.</p>}
         </Card>
@@ -365,6 +354,12 @@ export default function NewOrder() {
               </div>
             )}
           </div>
+        </Card>
+
+        {/* Step 5: order notes (after file upload) */}
+        <Card>
+          <h3 className="font-heading text-lg font-bold">5 · Order Notes <span className="text-sm font-normal text-brand-taupe">(optional)</span></h3>
+          <textarea data-testid="order-notes" className={inputCls + " mt-3"} rows={3} placeholder="Any overall instructions for this order…" value={settings.notes} onChange={(e) => setSettings({ ...settings, notes: e.target.value })} />
         </Card>
       </div>
 
