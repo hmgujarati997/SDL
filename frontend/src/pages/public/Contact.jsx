@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { PublicLayout } from "@/components/Layout";
 import api from "@/lib/api";
+import Seo from "@/components/Seo";
 import { toast } from "sonner";
 import { Phone, Mail } from "lucide-react";
 
@@ -10,6 +11,12 @@ export default function Contact() {
   useEffect(() => { api.get("/settings/public").then(({ data }) => setLab(data.lab || {})).catch(() => {}); }, []);
   return (
     <PublicLayout>
+      <Seo
+        path="/contact"
+        title="Contact Shree Dental Lab | Dental Lab serving Mumbai, Delhi, Pune & India"
+        description="Get in touch with Shree Dental Lab — your dental laboratory partner across India including Mumbai, Ahmedabad, Delhi, Jaipur, Udaipur, Bhopal, Indore and Pune. Call, email or send us a message."
+        keywords="contact dental lab India, dental lab phone, dental laboratory Mumbai Delhi Pune, zirconia lab contact, dental lab Ahmedabad contact"
+      />
       <section className="bg-brand-charcoal pt-28 pb-16 text-white sm:pt-32">
         <div className="mx-auto max-w-7xl px-6">
           <h1 className="font-heading text-4xl font-bold sm:text-5xl">Contact Us</h1>

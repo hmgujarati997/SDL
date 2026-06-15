@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { formatApiError, LOGO_MARK as LOGO } from "@/lib/api";
+import Seo from "@/components/Seo";
 import { toast } from "sonner";
 
 export default function Register() {
@@ -27,6 +28,12 @@ export default function Register() {
 
   return (
     <div className="flex min-h-screen flex-col bg-brand-charcoal lg:flex-row">
+      <Seo
+        path="/register"
+        title="Register Your Clinic | Shree Dental Lab — Dental Lab in India"
+        description="Register your dental clinic with Shree Dental Lab to get personalised volume pricing, fast turnaround and full case tracking. Serving dentists in Mumbai, Ahmedabad, Delhi, Jaipur, Udaipur, Bhopal, Indore, Pune & across India."
+        keywords="register dental lab India, dental lab online ordering, zirconia crown lab signup, dental laboratory Mumbai Delhi Pune Ahmedabad"
+      />
       <div className="hidden flex-1 flex-col justify-center bg-gradient-to-br from-brand-charcoal to-[#1c1416] p-12 text-white lg:flex">
         <img src={LOGO} alt="logo" className="h-16 w-16 rounded-lg object-cover" />
         <h1 className="mt-8 font-heading text-4xl font-bold">Register your clinic</h1>

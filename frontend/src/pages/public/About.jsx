@@ -1,5 +1,6 @@
 import { PublicLayout } from "@/components/Layout";
 import { Link } from "react-router-dom";
+import Seo from "@/components/Seo";
 import { Target, Gem, HeartHandshake } from "lucide-react";
 
 const IMG = "https://images.unsplash.com/photo-1575278616937-d474f5fda9a6?crop=entropy&cs=srgb&fm=jpg&q=85&w=1200";
@@ -7,6 +8,12 @@ const IMG = "https://images.unsplash.com/photo-1575278616937-d474f5fda9a6?crop=e
 export default function About() {
   return (
     <PublicLayout>
+      <Seo
+        path="/about"
+        title="About Shree Dental Lab | Trusted Dental Laboratory in India"
+        description="Shree Dental Lab is a precision-driven dental laboratory serving dentists in Mumbai, Ahmedabad, Delhi, Jaipur, Udaipur, Bhopal, Indore, Pune and across India — zirconia crowns, bridges and implant restorations with CAD/CAM accuracy."
+        keywords="about dental lab India, dental laboratory Mumbai, dental lab Pune, zirconia crown lab Ahmedabad, dental lab Jaipur, implant restoration lab India, CAD CAM dental lab"
+      />
       <section className="bg-brand-charcoal pt-28 pb-16 text-white sm:pt-32">
         <div className="mx-auto max-w-7xl px-6">
           <h1 className="font-heading text-4xl font-bold sm:text-5xl">About Shree Dental Lab</h1>

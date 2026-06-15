@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { PublicLayout } from "@/components/Layout";
 import { RollButton } from "@/components/RollButton";
+import Seo from "@/components/Seo";
 import { Link2 } from "lucide-react";
 
 const IMG = {
@@ -20,6 +21,12 @@ const services = [
 export default function Home() {
   return (
     <PublicLayout>
+      <Seo
+        path="/"
+        title="Shree Dental Lab | Zirconia Crowns & Bridges Dental Lab in India"
+        description="Premium dental laboratory for dentists in Mumbai, Ahmedabad, Delhi, Jaipur, Udaipur, Bhopal, Indore, Pune & across India — precision zirconia crowns, bridges & CAD/CAM restorations with fast turnaround and transparent pricing."
+        keywords="dental lab India, dental lab Mumbai, dental lab Ahmedabad, dental lab Delhi, dental lab Jaipur, dental lab Udaipur, dental lab Bhopal, dental lab Indore, dental lab Pune, zirconia crown lab, zirconia bridge, CAD CAM dental laboratory, crown and bridge lab India"
+      />
       {/* SECTION 1 — HERO */}
       <section className="relative flex min-h-screen flex-col bg-brand-ivory">
         <div className="hero-canvas">

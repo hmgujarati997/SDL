@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { formatApiError, LOGO_MARK as LOGO } from "@/lib/api";
+import Seo from "@/components/Seo";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -27,6 +28,12 @@ export default function Login() {
 
   return (
     <div className="flex min-h-screen flex-col bg-brand-charcoal lg:flex-row">
+      <Seo
+        path="/login"
+        title="Dentist Login | Shree Dental Lab — Dental Lab Portal India"
+        description="Login to your Shree Dental Lab dentist portal to track cases, view pricing, download GST invoices and place new zirconia crown & bridge orders from anywhere in India."
+        keywords="dentist login, dental lab portal India, Shree Dental Lab login"
+      />
       <div className="hidden flex-1 flex-col justify-center bg-gradient-to-br from-brand-charcoal to-[#1c1416] p-12 text-white lg:flex">
         <img src={LOGO} alt="logo" className="h-16 w-16 rounded-lg object-cover" />
         <h1 className="mt-8 font-heading text-4xl font-bold">Welcome back, Doctor.</h1>
