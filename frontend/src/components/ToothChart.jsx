@@ -7,7 +7,16 @@ const Q = {
   lower_left: [31, 32, 33, 34, 35, 36, 37, 38],
 };
 
-function Tooth({ n, active, onClick }) {
+const ACTIVE = {
+  red: "bg-brand-red text-white border-brand-ruby shadow-md scale-105",
+  gold: "bg-brand-gold text-brand-charcoal border-brand-gold shadow-md scale-105",
+};
+const INACTIVE = {
+  red: "bg-white text-brand-graphite border-brand-taupe/30 hover:border-brand-red hover:text-brand-red",
+  gold: "bg-white text-brand-graphite border-brand-taupe/30 hover:border-brand-gold hover:text-brand-gold",
+};
+
+function Tooth({ n, active, onClick, color }) {
   return (
     <button
       type="button"
@@ -15,9 +24,7 @@ function Tooth({ n, active, onClick }) {
       onClick={() => onClick(n)}
       className={cn(
         "relative flex h-11 w-9 sm:h-12 sm:w-10 items-center justify-center rounded-md border text-xs font-bold transition-all duration-200",
-        active
-          ? "bg-brand-red text-white border-brand-ruby shadow-md scale-105"
-          : "bg-white text-brand-graphite border-brand-taupe/30 hover:border-brand-red hover:text-brand-red"
+        active ? ACTIVE[color] : INACTIVE[color]
       )}
     >
       {n}
@@ -25,12 +32,13 @@ function Tooth({ n, active, onClick }) {
   );
 }
 
-export default function ToothChart({ selected = [], onToggle }) {
+export default function ToothChart({ selected = [], onToggle, color = "red" }) {
+  const c = ACTIVE[color] ? color : "red";
   const isSel = (n) => selected.includes(n);
   const row = (arr) => (
     <div className="flex gap-1">
       {arr.map((n) => (
-        <Tooth key={n} n={n} active={isSel(n)} onClick={onToggle} />
+        <Tooth key={n} n={n} active={isSel(n)} onClick={onToggle} color={c} />
       ))}
     </div>
   );

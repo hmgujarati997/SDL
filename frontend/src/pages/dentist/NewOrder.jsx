@@ -10,6 +10,11 @@ import { Plus, Trash2, Sparkles, Check, ChevronRight, Upload, X, Image as ImageI
 
 const uid = () => Math.random().toString(36).slice(2);
 
+function tierColor(tierName = "") {
+  // Monolithic → red, Layered → golden yellow. Default red.
+  return tierName.toLowerCase().includes("layered") ? "gold" : "red";
+}
+
 export default function NewOrder() {
   const { user } = useAuth();
   const nav = useNavigate();
@@ -267,6 +272,7 @@ export default function NewOrder() {
             <div className="mt-5 space-y-5">
               {c.items.map((it, ii) => {
                 const product = products.find((p) => p.id === it.product_id);
+                const tColor = tierColor(tierById[it.tier_id]?.name);
                 return (
                   <div key={it.uid} className="rounded-xl border border-brand-taupe/20 p-4">
                     <div className="flex items-center justify-between">
@@ -284,15 +290,18 @@ export default function NewOrder() {
                         <div className="grid gap-3 sm:grid-cols-2">
                           {product.tiers.map((t) => {
                             const sel = it.tier_id === t.id;
+                            const tc = tierColor(t.name);
+                            const selCls = tc === "gold" ? "border-brand-gold bg-brand-gold/10" : "border-brand-red bg-brand-red/5";
+                            const hoverCls = tc === "gold" ? "hover:border-brand-gold/50" : "hover:border-brand-red/40";
                             return (
                               <button key={t.id} data-testid={`tier-${t.id}`} onClick={() => setItem(ci, ii, { tier_id: t.id })}
-                                className={`rounded-xl border-2 p-3 text-left transition ${sel ? "border-brand-red bg-brand-red/5" : "border-brand-taupe/20 hover:border-brand-red/40"}`}>
+                                className={`rounded-xl border-2 p-3 text-left transition ${sel ? selCls : `border-brand-taupe/20 ${hoverCls}`}`}>
                                 <div className="flex items-center justify-between">
                                   <span className="font-heading font-bold">{t.name}</span>
-                                  {sel && <Check className="h-4 w-4 text-brand-red" />}
+                                  {sel && <Check className={`h-4 w-4 ${tc === "gold" ? "text-brand-gold" : "text-brand-red"}`} />}
                                 </div>
                                 <p className="mt-1 text-xs text-brand-taupe">{t.description}</p>
-                                <p className="mt-2 font-bold text-brand-red">{inr(t.rate_per_unit)}<span className="text-xs font-normal text-brand-taupe">/unit</span></p>
+                                <p className={`mt-2 font-bold ${tc === "gold" ? "text-brand-gold" : "text-brand-red"}`}>{inr(t.rate_per_unit)}<span className="text-xs font-normal text-brand-taupe">/unit</span></p>
                               </button>
                             );
                           })}
@@ -302,8 +311,14 @@ export default function NewOrder() {
 
                     {it.tier_id && (
                       <>
-                        <p className="mb-2 mt-4 text-sm text-brand-taupe">Select teeth (tap to toggle)</p>
-                        <ToothChart selected={it.teeth.map((t) => t.tooth)} onToggle={(tn) => toggleTooth(ci, ii, tn)} />
+                        <div className="mb-2 mt-4 flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-sm text-brand-taupe">Select teeth (tap to toggle)</p>
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold">
+                            <span className={`h-3 w-3 rounded ${tColor === "gold" ? "bg-brand-gold" : "bg-brand-red"}`} />
+                            <span className={tColor === "gold" ? "text-brand-gold" : "text-brand-red"}>{tierById[it.tier_id]?.name}</span>
+                          </span>
+                        </div>
+                        <ToothChart color={tColor} selected={it.teeth.map((t) => t.tooth)} onToggle={(tn) => toggleTooth(ci, ii, tn)} />
                         {it.teeth.length > 0 && (
                           <div className="mt-3">
                             <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -315,7 +330,7 @@ export default function NewOrder() {
                             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                               {it.teeth.map((t) => (
                                 <div key={t.tooth} className="flex items-center gap-2 rounded-lg border border-brand-taupe/20 px-2 py-1.5">
-                                  <span className="text-sm font-bold text-brand-red">{t.tooth}</span>
+                                  <span className={`text-sm font-bold ${tColor === "gold" ? "text-brand-gold" : "text-brand-red"}`}>{t.tooth}</span>
                                   <select data-testid={`tooth-shade-${t.tooth}`} className="flex-1 rounded border-brand-taupe/30 bg-transparent text-sm outline-none" value={t.shade} onChange={(e) => setToothShade(ci, ii, t.tooth, e.target.value)}>
                                     {shades.map((s) => <option key={s}>{s}</option>)}
                                   </select>
