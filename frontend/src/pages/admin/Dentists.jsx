@@ -88,7 +88,6 @@ function DentistDetail({ dentist, tiers, onDeleted }) {
         <p className="mb-2 text-sm font-semibold text-brand-graphite">Billing & Address</p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Field label="Billing Address" value={d.billing_address} />
-          <Field label="Clinic Address" value={d.clinic_address} />
           <Field label="Delivery Address" value={d.delivery_address} />
           <Field label="City" value={d.city} />
           <Field label="State" value={d.state} />

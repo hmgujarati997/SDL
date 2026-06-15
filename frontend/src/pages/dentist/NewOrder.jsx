@@ -15,7 +15,7 @@ export default function NewOrder() {
   const nav = useNavigate();
   const dProfile = user?.dentist || {};
   const profileAddress = [
-    dProfile.delivery_address || dProfile.clinic_address || dProfile.billing_address,
+    dProfile.delivery_address || dProfile.billing_address,
     [dProfile.city, dProfile.state, dProfile.pincode].filter(Boolean).join(", "),
   ].filter(Boolean).join(", ");
   const [products, setProducts] = useState([]);
