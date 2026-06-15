@@ -35,7 +35,7 @@ EVENT_FOR_STATUS = {
 
 # WhatsApp messages are sent ONLY for these events (order received & couriered/dispatched).
 # All other status changes still create in-app notifications but no WhatsApp.
-WHATSAPP_SEND_EVENTS = {"order_placed", "impression_placed", "dispatched"}
+WHATSAPP_SEND_EVENTS = {"order_placed", "impression_placed", "dispatched", "design_assigned"}
 
 
 async def _dentist_of(batch):
@@ -737,6 +737,20 @@ async def assign_designer(bid: str, body: dict = Body(...), user: dict = Depends
     await log_activity(bid, f"Assigned to designer {designer['name']}", user, dentist_visible=False)
     await create_notification(designer["id"], "New assignment", f"Order assigned to you", order_id=bid, kind="assignment")
     batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
+    # Notify the designer on WhatsApp (uses their team mobile number).
+    cases = await db.order_cases.find({"batch_id": bid}, {"_id": 0}).to_list(50)
+    case_count = len(cases)
+    designer_phone = designer.get("whatsapp") or designer.get("mobile") or ""
+    await send_whatsapp(
+        event="design_assigned", to_phone=designer_phone,
+        dentist_name=designer["name"], order_no=batch["batch_no"], patient_name="",
+        fields=f5("A new design has been assigned to you.",
+                  f"Order No: {batch['batch_no']}",
+                  f"Cases: {case_count}",
+                  "Please download the scan files and start the design.",
+                  "Upload the finished design from your dashboard."),
+        deep_link_suffix=bid,
+    )
     await update_status(bid, StatusIn(status="Sent to Designer", note=f"Assigned to {designer['name']}"), user)
     return {"ok": True}
 

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import api, { API, inr, fmtDate, fmtDateTime, fmtDuration, formatApiError } from "@/lib/api";
+import api, { API, inr, fmtDate, fmtDateTime, fmtDateOnly, fmtDuration, formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Card, Btn, Field, inputCls } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
@@ -115,7 +115,7 @@ export default function OrderDetail() {
                       </div>
                     ))}
                   </div>
-                  {o.expected_delivery && <p className="mt-3 text-sm text-brand-graphite">Expected delivery: <b>{fmtDate(o.expected_delivery)}</b></p>}
+                  {o.expected_delivery && <p className="mt-3 text-sm text-brand-graphite">Expected delivery: <b>{fmtDateOnly(o.expected_delivery)}</b></p>}
                 </>
               );
             })()}

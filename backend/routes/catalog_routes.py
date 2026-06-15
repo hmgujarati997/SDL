@@ -1,11 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, UploadFile, File
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, List
+import os
 
-from deps import db, gen_id, now_iso, get_current_user, require_roles, get_setting
+from deps import db, gen_id, now_iso, get_current_user, require_roles, get_setting, UPLOAD_DIR
 from engine import compute_quote, resolve_unit_rate, best_slab_discount
 
 router = APIRouter(tags=["catalog"])
+
+LOGO_EXT = {".png", ".jpg", ".jpeg", ".webp", ".svg", ".gif"}
 
 
 # ---------- Products & Tiers ----------
@@ -102,6 +106,35 @@ async def get_settings(user: dict = Depends(require_roles("admin"))):
 async def update_settings(key: str, body: dict = Body(...), user: dict = Depends(require_roles("admin"))):
     await db.settings.update_one({"key": key}, {"$set": {"value": body.get("value", body)}}, upsert=True)
     return {"ok": True}
+
+
+@router.post("/settings/logo")
+async def upload_logo(file: UploadFile = File(...), user: dict = Depends(require_roles("admin"))):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in LOGO_EXT:
+        raise HTTPException(400, f"Unsupported image type {ext}. Use PNG, JPG, WEBP, SVG or GIF.")
+    data = await file.read()
+    if len(data) > 5 * 1024 * 1024:
+        raise HTTPException(400, "Logo must be under 5 MB")
+    stored = "logo_" + gen_id() + ext
+    (UPLOAD_DIR / stored).write_bytes(data)
+    public_url = os.environ.get("APP_PUBLIC_URL", "").rstrip("/")
+    logo_url = f"{public_url}/api/assets/{stored}"
+    lab = await get_setting("lab", {}) or {}
+    lab["logo_url"] = logo_url
+    await db.settings.update_one({"key": "lab"}, {"$set": {"value": lab}}, upsert=True)
+    return {"logo_url": logo_url}
+
+
+@router.get("/assets/{name}")
+async def serve_asset(name: str):
+    # Public (no auth) — used for logos on the landing page, login and WhatsApp header.
+    if "/" in name or ".." in name:
+        raise HTTPException(400, "Invalid name")
+    path = UPLOAD_DIR / name
+    if not path.exists():
+        raise HTTPException(404, "Not found")
+    return FileResponse(str(path))
 
 
 # ---------- Dentist-specific pricing ----------

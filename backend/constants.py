@@ -89,6 +89,7 @@ def dentist_facing_status(status):
 WHATSAPP_EVENTS = [
     "order_placed", "order_accepted", "file_issue", "payment_request",
     "payment_success", "payment_failed", "sent_to_designer", "design_received",
+    "design_assigned",
     "cutting_started", "sintering_started", "glazing_started", "ready_packaging",
     "packed", "dispatched", "delivered", "trial_dispatched", "remake_received",
     "remake_created", "remake_file_required", "order_delayed",

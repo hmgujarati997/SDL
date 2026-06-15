@@ -35,7 +35,6 @@ async def seed():
     seed_demo = os.environ.get("SEED_DEMO_DATA", "false").strip().lower() == "true"
 
     # Settings
-    public_url = os.environ.get("APP_PUBLIC_URL", "")
     await _setting("lab", {
         "name": "Shree Dental Lab",
         "gstin": "24ABCDE1234F1Z5",
@@ -57,7 +56,6 @@ async def seed():
         "template_name": "shree_order_update",
         "language_code": "en",
         "image_header_url": "https://customer-assets.emergentagent.com/job_3147c62a-2b30-4c49-a67d-6d5a71dfc726/artifacts/b9orur0u_Shree%20Dental%20Lab.png",
-        "learn_more_base_url": f"{public_url}/orders/",
         "events": {e: True for e in WHATSAPP_EVENTS},
     })
 

@@ -65,7 +65,6 @@ async def send_whatsapp(*, event, to_phone, dentist_name, order_no,
     events_cfg = settings.get("events", {})
     fields = fields or {}
     image_header = settings.get("image_header_url", "")
-    learn_more = (settings.get("learn_more_base_url", "") + deep_link_suffix) if deep_link_suffix else settings.get("learn_more_base_url", "")
 
     log = {
         "id": gen_id(),
@@ -118,7 +117,6 @@ async def send_whatsapp(*, event, to_phone, dentist_name, order_no,
         "field_3": fields.get("3", ""),
         "field_4": fields.get("4", ""),
         "field_5": fields.get("5", ""),
-        "button_1": learn_more,
         "contact": {"first_name": dentist_name or "Doctor"},
     }
     url = f"{base_url.rstrip('/')}/{vendor_uid}/contact/send-template-message"
