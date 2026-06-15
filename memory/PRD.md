@@ -114,3 +114,12 @@ Backend 23/23 pytest PASSED. No critical/UI bugs. Mock: Razorpay payments, Whats
 - P1: Razorpay mock -> live (needs Key ID + Secret).
 - P1: WhatsApp API mock -> live (needs Vendor UID + Token).
 - Optional: per-row trash icon on Orders list (admin) for quicker delete.
+
+## Session 2026-06-15 (cont.) — more enhancements
+- **Stage timing (admin)**: order detail returns `stage_durations` (admin/employee only) computed from status history; UI shows per-stage "took Xh Ym" + total turnaround. Closed history gaps in cancel/hold/impression-damaged via `record_status_change`.
+- **IST timestamps site-wide**: `fmtDate`/`fmtDateTime` force Asia/Kolkata + show date+time+"IST"; added `fmtDateOnly` for date-only fields (expected delivery).
+- **Designer WhatsApp on assignment**: new `design_assigned` event (in WHATSAPP_EVENTS + WHATSAPP_SEND_EVENTS); assign_designer sends WhatsApp to designer mobile. (Mock until live creds.)
+- **Logo upload**: POST /api/settings/logo (admin) stores image, public GET /api/assets/{name}; Settings→Lab has upload + preview + URL field. Removed `learn_more_base_url` setting + dynamic WhatsApp button (Learn More is a static quick-reply).
+- **Registration/profile**: removed Clinic Address field; Profile delivery address has a "same as billing address" checkbox that mirrors + locks the field.
+- **Impression shipping (dentist→lab)**: admin sets lab `receiving_address`/`receiving_phone` (Settings→Lab). Dentist on Impression Awaited orders sees a "Ship Your Impression" card with the lab ship-to address/phone + courier + tracking ID form (POST /api/orders/{id}/impression/ship). Saves tracking on impression_shipments, notifies all admins; admin order page shows "Impression on the way" with courier/tracking/ship date.
+- All verified via curl + screenshots.

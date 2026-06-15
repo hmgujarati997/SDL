@@ -42,6 +42,8 @@ async def seed():
         "state": "Gujarat",
         "phone": "+91 90000 00000",
         "email": "info@shreedentallab.com",
+        "receiving_address": "",
+        "receiving_phone": "",
         "logo_url": "https://customer-assets.emergentagent.com/job_3147c62a-2b30-4c49-a67d-6d5a71dfc726/artifacts/b9orur0u_Shree%20Dental%20Lab.png",
     })
     await _setting("razorpay", {"enabled": False, "key_id": "", "key_secret": "", "mode": "test"})

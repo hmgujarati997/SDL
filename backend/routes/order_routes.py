@@ -314,8 +314,8 @@ async def create_order(body: OrderIn, user: dict = Depends(require_roles("dentis
         await notify(batch, "impression_placed",
                      f5("Your impression order has been placed.", f"Order No: {batch_no}",
                         f"Patient: {patient_names} | Units: {units}",
-                        f"Ship impressions to: {lab.get('address','')}",
-                        "We will notify you when the parcel arrives."),
+                        f"Ship impressions to: {lab.get('receiving_address') or lab.get('address','')}",
+                        "Add the courier tracking ID from your dashboard once shipped."),
                      title="Impression order placed", body=f"Order {batch_no} placed. Ship impressions to the lab.")
     else:
         await notify(batch, "order_placed",
@@ -787,6 +787,36 @@ async def impression_scanned(bid: str, user: dict = Depends(require_roles("admin
     await db.impression_shipments.update_one({"batch_id": bid}, {"$set": {"status": "In-House Scanning"}})
     await update_status(bid, StatusIn(status="In-House Scanning", note="Lab scanned impression"), user)
     return {"ok": True}
+
+
+@router.post("/orders/{bid}/impression/ship")
+async def impression_ship(bid: str, body: dict = Body(...), user: dict = Depends(require_roles("dentist"))):
+    """Dentist submits the courier + tracking ID for the impression they are sending to the lab."""
+    batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
+    if not batch:
+        raise HTTPException(404, "Order not found")
+    dent = await db.dentists.find_one({"user_id": user["id"]}, {"_id": 0})
+    if not dent or batch["dentist_id"] != dent["id"]:
+        raise HTTPException(403, "Forbidden")
+    if not batch.get("is_impression"):
+        raise HTTPException(400, "This order does not require a physical impression")
+    tracking = (body.get("tracking_no") or "").strip()
+    if not tracking:
+        raise HTTPException(400, "Tracking ID is required")
+    courier = (body.get("courier_name") or "").strip()
+    await db.impression_shipments.update_one({"batch_id": bid}, {"$set": {
+        "courier_name": courier, "tracking_no": tracking,
+        "shipped_at": now_iso(), "shipped_by_dentist": True}}, upsert=True)
+    await log_activity(bid, f"Dentist shipped impression — {courier} #{tracking}".strip(),
+                       user, dentist_visible=True)
+    admins = await db.users.find({"role": "admin"}, {"id": 1, "_id": 0}).to_list(50)
+    for a in admins:
+        await create_notification(a["id"], "Impression shipped",
+                                  f"{dent['name']} shipped impression for {batch['batch_no']} — "
+                                  f"{courier + ' ' if courier else ''}#{tracking}",
+                                  order_id=bid, kind="impression")
+    return {"ok": True, "tracking_no": tracking, "courier_name": courier}
+
 
 
 # ---------------- Cancel / Hold ----------------

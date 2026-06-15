@@ -18,6 +18,7 @@ export default function OrderDetail() {
   const [o, setO] = useState(null);
   const [meta, setMeta] = useState({ statuses: [], file_issue_reasons: [], remake_reasons: [] });
   const [designers, setDesigners] = useState([]);
+  const [lab, setLab] = useState({});
   const isStaff = ["admin", "employee", "designer"].includes(user?.role);
   const isAdmin = user?.role === "admin";
 
@@ -25,6 +26,7 @@ export default function OrderDetail() {
   useEffect(() => {
     load();
     api.get("/meta").then(({ data }) => setMeta(data)).catch(() => {});
+    api.get("/settings/public").then(({ data }) => setLab(data.lab || {})).catch(() => {});
     if (user?.role === "admin") api.get("/users?role=designer").then(({ data }) => setDesigners(data)).catch(() => {});
   }, [load]);
 
@@ -226,6 +228,11 @@ export default function OrderDetail() {
             </Card>
           )}
 
+          {/* Dentist: ship the physical impression to the lab */}
+          {user?.role === "dentist" && o.is_impression && o.status === "Impression Awaited" && (
+            <ShipImpressionCard order={o} lab={lab} onDone={load} />
+          )}
+
           {/* Staff actions */}
           {isStaff && (
             <Card>
@@ -236,6 +243,14 @@ export default function OrderDetail() {
                 <div className="mt-3 space-y-2">
                   <FileIssueBlock order={o} reasons={meta.file_issue_reasons} onDone={load} />
                   <AssignDesigner order={o} designers={designers} onDone={load} />
+                </div>
+              )}
+              {o.is_impression && o.impression?.tracking_no && (
+                <div className="mt-3 rounded-lg border border-brand-gold/30 bg-brand-gold/5 p-3 text-sm" data-testid="impression-tracking-info">
+                  <p className="font-semibold text-brand-graphite">Impression on the way</p>
+                  <p className="text-brand-taupe">Courier: <b className="text-brand-graphite">{o.impression.courier_name || "—"}</b></p>
+                  <p className="text-brand-taupe">Tracking ID: <b className="text-brand-graphite">{o.impression.tracking_no}</b></p>
+                  {o.impression.shipped_at && <p className="text-xs text-brand-taupe">Shipped {fmtDate(o.impression.shipped_at)}</p>}
                 </div>
               )}
               {o.is_impression && (o.status === "Impression Awaited") && (
@@ -427,6 +442,50 @@ function DeleteOrderBlock({ order, onDeleted }) {
           </div>
         </div>
       )}
+    </Card>
+  );
+}
+
+function ShipImpressionCard({ order, lab, onDone }) {
+  const existing = order.impression || {};
+  const [courier, setCourier] = useState(existing.courier_name || "");
+  const [tracking, setTracking] = useState(existing.tracking_no || "");
+  const [busy, setBusy] = useState(false);
+  const submit = async () => {
+    if (!tracking.trim()) { toast.error("Please enter the tracking ID"); return; }
+    setBusy(true);
+    try {
+      await api.post(`/orders/${order.id}/impression/ship`, { courier_name: courier, tracking_no: tracking });
+      toast.success("Tracking submitted — the lab can now track your parcel");
+      onDone();
+    } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); }
+    setBusy(false);
+  };
+  return (
+    <Card className="border-brand-gold/40" data-testid="ship-impression-card">
+      <h3 className="mb-1 flex items-center gap-2 font-heading text-lg font-bold"><Package className="h-5 w-5 text-brand-red" />Ship Your Impression</h3>
+      <p className="mb-3 text-sm text-brand-taupe">Courier your physical impression to the lab address below, then add the tracking ID so we can track it.</p>
+      <div className="mb-4 rounded-xl bg-brand-ivory p-3 text-sm">
+        <p className="text-xs font-semibold uppercase tracking-wider text-brand-taupe">Ship to</p>
+        <p className="mt-1 whitespace-pre-line font-medium text-brand-graphite" data-testid="lab-receiving-address">
+          {lab.receiving_address || lab.address || "Address not set — please contact the lab."}
+        </p>
+        {(lab.receiving_phone || lab.phone) && (
+          <p className="mt-1 text-brand-graphite" data-testid="lab-receiving-phone">Phone: <b>{lab.receiving_phone || lab.phone}</b></p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Field label="Courier / Service (optional)">
+          <input data-testid="impression-courier-input" className={inputCls} placeholder="e.g. DTDC, Blue Dart, India Post" value={courier} onChange={(e) => setCourier(e.target.value)} />
+        </Field>
+        <Field label="Tracking ID" required>
+          <input data-testid="impression-tracking-input" className={inputCls} placeholder="Enter courier tracking number" value={tracking} onChange={(e) => setTracking(e.target.value)} />
+        </Field>
+        <Btn data-testid="submit-tracking-btn" className="w-full" onClick={submit} disabled={busy}>
+          {busy ? "Saving…" : (existing.tracking_no ? "Update Tracking ID" : "Submit Tracking ID")}
+        </Btn>
+        {existing.tracking_no && <p className="text-xs text-green-700">Submitted: {existing.courier_name ? existing.courier_name + " · " : ""}#{existing.tracking_no}</p>}
+      </div>
     </Card>
   );
 }

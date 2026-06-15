@@ -64,7 +64,7 @@ function LabSection({ lab, onSave }) {
   const [v, setV] = useState(lab);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef(null);
-  const fields = [["name", "Lab Name"], ["gstin", "GSTIN"], ["address", "Address"], ["state", "State"], ["phone", "Phone"], ["email", "Email"]];
+  const fields = [["name", "Lab Name"], ["gstin", "GSTIN"], ["address", "Address"], ["state", "State"], ["phone", "Phone"], ["email", "Email"], ["receiving_address", "Receiving Address (for impressions/parcels)"], ["receiving_phone", "Receiving Phone (for shipments)"]];
 
   const uploadLogo = async (e) => {
     const f = e.target.files?.[0];
