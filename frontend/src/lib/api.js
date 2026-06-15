@@ -35,6 +35,28 @@ export function fmtDate(iso) {
   }
 }
 
+export function fmtDateTime(iso) {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: true });
+  } catch {
+    return iso;
+  }
+}
+
+export function fmtDuration(sec) {
+  if (sec == null) return "—";
+  sec = Math.max(0, Math.floor(sec));
+  const d = Math.floor(sec / 86400);
+  const h = Math.floor((sec % 86400) / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m`;
+  return `${sec}s`;
+}
+
 export const LOGO = "https://customer-assets.emergentagent.com/job_3147c62a-2b30-4c49-a67d-6d5a71dfc726/artifacts/b9orur0u_Shree%20Dental%20Lab.png";
 export const LOGO_MARK = "https://customer-assets.emergentagent.com/job_dental-order-hub-2/artifacts/uwhapyv1_Shree%20Dental%20Lab%20-%20Copy.png";
 

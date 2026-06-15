@@ -440,6 +440,68 @@ def _mask_detail_for_dentist(detail):
     return detail
 
 
+async def record_status_change(bid, old, new, note, user_name, level="batch", ref_id=None):
+    """Append a status transition to order_status_history so stage durations stay accurate."""
+    await db.order_status_history.insert_one({
+        "id": gen_id(), "order_id": bid, "level": level, "ref_id": ref_id or bid,
+        "old": old, "new": new, "note": note, "user_name": user_name, "created_at": now_iso()})
+
+
+_TERMINAL_STATUSES = {"Delivered", "Cancelled"}
+
+
+def _parse_iso(s):
+    if not s:
+        return None
+    try:
+        dt = datetime.fromisoformat(s)
+        return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+    except Exception:
+        return None
+
+
+def _compute_stage_durations(history):
+    """Derive how long each status stage took from the status history timeline.
+    Consecutive entries with the same status are merged. The current (last) stage
+    is 'ongoing' unless the order is in a terminal state."""
+    items = sorted([h for h in history if h.get("created_at")], key=lambda h: h["created_at"])
+    now = datetime.now(timezone.utc)
+    raw = []
+    for i, h in enumerate(items):
+        start = _parse_iso(h["created_at"])
+        if not start:
+            continue
+        if i + 1 < len(items):
+            end, ongoing = _parse_iso(items[i + 1]["created_at"]), False
+        elif h.get("new") in _TERMINAL_STATUSES:
+            end, ongoing = start, False
+        else:
+            end, ongoing = now, True
+        dur = int(max(0, (end - start).total_seconds())) if end else 0
+        raw.append({
+            "status": h.get("new"), "entered_at": h["created_at"],
+            "duration_seconds": dur, "ongoing": ongoing,
+            "note": h.get("note"), "user_name": h.get("user_name"),
+        })
+    # Merge consecutive entries that share the same status.
+    stages = []
+    for s in raw:
+        if stages and stages[-1]["status"] == s["status"]:
+            stages[-1]["duration_seconds"] += s["duration_seconds"]
+            stages[-1]["ongoing"] = s["ongoing"]
+        else:
+            stages.append(s)
+    total = 0
+    if items:
+        first = _parse_iso(items[0]["created_at"])
+        last = items[-1]
+        end = _parse_iso(last["created_at"]) if last.get("new") in _TERMINAL_STATUSES else now
+        if first and end:
+            total = int(max(0, (end - first).total_seconds()))
+    return {"stages": stages, "total_seconds": total}
+
+
+
 async def _order_detail(batch):
     bid = batch["id"]
     batch["cases"] = await db.order_cases.find({"batch_id": bid}, {"_id": 0}).to_list(100)
@@ -475,6 +537,8 @@ async def get_order(bid: str, user: dict = Depends(get_current_user)):
     if user["role"] == "dentist":
         detail["activity"] = [a for a in detail["activity"] if a.get("dentist_visible")]
         detail = _mask_detail_for_dentist(detail)
+    elif user["role"] in ("admin", "employee"):
+        detail["stage_durations"] = _compute_stage_durations(detail["history"])
     return detail
 
 
@@ -688,6 +752,7 @@ async def impression_receive(bid: str, body: dict = Body(...), user: dict = Depe
         {"$set": {"status": "Impression Received", "condition": condition, "received_at": now_iso()}})
     if condition in ("Damaged", "Incomplete"):
         await db.order_batches.update_one({"id": bid}, {"$set": {"status": "On Hold"}})
+        await record_status_change(bid, batch["status"], "On Hold", f"Impression {condition}", user["name"])
         await log_activity(bid, f"Impression received - {condition}, On Hold", user, dentist_visible=True)
         await notify(batch, "impression_damaged",
                      f5("There is an issue with your received impression.", f"Order No: {batch['batch_no']}",
@@ -723,13 +788,18 @@ async def cancel_order(bid: str, body: dict = Body(default={}), user: dict = Dep
         if batch["status"] not in ("Order Received",):
             raise HTTPException(400, "Order can only be cancelled while in 'Order Received'")
     await db.order_batches.update_one({"id": bid}, {"$set": {"status": "Cancelled"}})
+    await record_status_change(bid, batch["status"], "Cancelled", body.get("reason", ""), user["name"])
     await log_activity(bid, f"Order cancelled. Reason: {body.get('reason','')}", user, dentist_visible=True)
     return {"ok": True}
 
 
 @router.post("/orders/{bid}/hold")
 async def hold_order(bid: str, body: dict = Body(...), user: dict = Depends(require_roles("admin"))):
+    batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
+    if not batch:
+        raise HTTPException(404, "Order not found")
     await db.order_batches.update_one({"id": bid}, {"$set": {"status": "On Hold"}})
+    await record_status_change(bid, batch["status"], "On Hold", body.get("reason", ""), user["name"])
     await log_activity(bid, f"Order put On Hold. Reason: {body.get('reason','')}", user, dentist_visible=True)
     return {"ok": True}
 

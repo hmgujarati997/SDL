@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import api, { API, inr, fmtDate, formatApiError } from "@/lib/api";
+import api, { API, inr, fmtDate, fmtDateTime, fmtDuration, formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Card, Btn, Field, inputCls } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
@@ -82,22 +82,43 @@ export default function OrderDetail() {
         <div className="space-y-5 lg:col-span-2">
           {/* Timeline */}
           <Card>
-            <h3 className="mb-4 flex items-center gap-2 font-heading text-lg font-bold"><History className="h-5 w-5 text-brand-red" />Status Timeline</h3>
-            <div className="space-y-3">
-              {o.history.map((h, i) => (
-                <div key={h.id} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <span className={`h-3 w-3 rounded-full ${i === o.history.length - 1 ? "bg-brand-red" : "bg-brand-gold"}`} />
-                    {i < o.history.length - 1 && <span className="h-full w-px bg-brand-taupe/30" />}
+            {(() => {
+              const sd = o.stage_durations;
+              const tl = sd
+                ? sd.stages.map((s, i) => ({ key: `s${i}`, label: s.status, at: s.entered_at, user_name: s.user_name, note: s.note, dur: s.duration_seconds, ongoing: s.ongoing }))
+                : o.history.map((h) => ({ key: h.id, label: h.new, at: h.created_at, user_name: h.user_name, note: h.note }));
+              return (
+                <>
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="flex items-center gap-2 font-heading text-lg font-bold"><History className="h-5 w-5 text-brand-red" />Status Timeline</h3>
+                    {sd && <span data-testid="total-turnaround" className="inline-flex items-center gap-1 rounded-full bg-brand-charcoal px-3 py-1 text-xs font-semibold text-white">Total time: {fmtDuration(sd.total_seconds)}</span>}
                   </div>
-                  <div className="pb-2">
-                    <p className="text-sm font-semibold">{h.new}</p>
-                    <p className="text-xs text-brand-taupe">{fmtDate(h.created_at)} · {h.user_name}{h.note ? ` · ${h.note}` : ""}</p>
+                  <div className="space-y-3">
+                    {tl.map((t, i) => (
+                      <div key={t.key} className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <span className={`h-3 w-3 rounded-full ${i === tl.length - 1 ? "bg-brand-red" : "bg-brand-gold"}`} />
+                          {i < tl.length - 1 && <span className="h-full w-px bg-brand-taupe/30" />}
+                        </div>
+                        <div className="flex-1 pb-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-semibold">{t.label}</p>
+                            {sd && (
+                              <span data-testid={`stage-duration-${i}`}
+                                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${t.ongoing ? "bg-amber-100 text-amber-800" : "bg-brand-ivory text-brand-taupe"}`}>
+                                {t.ongoing ? `In progress · ${fmtDuration(t.dur)}` : `took ${fmtDuration(t.dur)}`}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-brand-taupe">{(sd ? fmtDateTime(t.at) : fmtDate(t.at))} · {t.user_name}{t.note ? ` · ${t.note}` : ""}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
-            </div>
-            {o.expected_delivery && <p className="mt-3 text-sm text-brand-graphite">Expected delivery: <b>{fmtDate(o.expected_delivery)}</b></p>}
+                  {o.expected_delivery && <p className="mt-3 text-sm text-brand-graphite">Expected delivery: <b>{fmtDate(o.expected_delivery)}</b></p>}
+                </>
+              );
+            })()}
           </Card>
 
           {/* Cases & items */}
