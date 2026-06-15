@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import api, { API, inr, fmtDate, formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Card, Btn, Field, inputCls } from "@/components/UI";
@@ -8,11 +8,12 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { toast } from "sonner";
 import {
   Upload, Download, FileText, Truck, MessageSquare, History, CheckCircle2,
-  AlertTriangle, UserCog, Printer, RotateCcw, Package, ChevronLeft,
+  AlertTriangle, UserCog, Printer, RotateCcw, Package, ChevronLeft, Trash2,
 } from "lucide-react";
 
 export default function OrderDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [o, setO] = useState(null);
   const [meta, setMeta] = useState({ statuses: [], file_issue_reasons: [], remake_reasons: [] });
@@ -235,6 +236,7 @@ export default function OrderDetail() {
               </Card>
               <DispatchBlock order={o} onDone={load} dl={dl} act={act} />
               {o.remakes?.length > 0 && <Card><h3 className="mb-2 font-heading font-bold">Remake Orders</h3>{o.remakes.map((r) => <Link key={r.id} to={`/app/orders/${r.id}`} className="block text-sm font-semibold text-brand-red">{r.batch_no}</Link>)}</Card>}
+              <DeleteOrderBlock order={o} onDeleted={() => navigate("/app/orders")} />
             </>
           )}
 
@@ -361,6 +363,49 @@ function DispatchBlock({ order, onDone, dl, act }) {
           <Btn variant="outline" className="flex-1" onClick={() => dl(`/orders/${order.id}/dispatch-label?size=A4`)}>A4</Btn>
         </div>
       </div>
+    </Card>
+  );
+}
+
+function DeleteOrderBlock({ order, onDeleted }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const match = text.trim() === order.batch_no;
+  const doDelete = async () => {
+    setBusy(true);
+    try {
+      await api.delete(`/orders/${order.id}`);
+      toast.success(`${order.batch_no} deleted`);
+      onDeleted();
+    } catch (e) {
+      toast.error(formatApiError(e.response?.data?.detail));
+      setBusy(false);
+    }
+  };
+  return (
+    <Card className="border-brand-red/30">
+      <h3 className="mb-1 flex items-center gap-2 font-heading text-lg font-bold text-brand-red"><Trash2 className="h-5 w-5" />Delete Order</h3>
+      <p className="mb-3 text-sm text-brand-taupe">Permanently removes this order and all its cases, files, invoices, payments and history. This cannot be undone.</p>
+      <Btn variant="outline" data-testid="delete-order-btn" className="w-full border-brand-red text-brand-red hover:bg-brand-red hover:text-white" onClick={() => setOpen(true)}>
+        <Trash2 className="h-4 w-4" />Delete this order
+      </Btn>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => !busy && setOpen(false)}>
+          <div data-testid="delete-order-dialog" className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="flex items-center gap-2 font-heading text-lg font-bold text-brand-red"><AlertTriangle className="h-5 w-5" />Delete {order.batch_no}?</h3>
+            <p className="mt-2 text-sm text-brand-graphite">This permanently deletes this order along with its cases, files, invoices, payments and any linked remakes. This cannot be undone.</p>
+            <p className="mt-3 text-sm text-brand-taupe">Type <span className="rounded bg-brand-ivory px-1.5 py-0.5 font-mono font-semibold text-brand-red">{order.batch_no}</span> to confirm:</p>
+            <input data-testid="delete-order-confirm-input" autoFocus value={text} onChange={(e) => setText(e.target.value)} className={inputCls + " mt-2"} placeholder={order.batch_no} />
+            <div className="mt-4 flex gap-2">
+              <Btn variant="ghost" className="flex-1" onClick={() => setOpen(false)} disabled={busy}>Cancel</Btn>
+              <Btn data-testid="delete-order-confirm-btn" disabled={!match || busy} className="flex-1 bg-brand-red text-white hover:bg-brand-ruby disabled:opacity-50" onClick={doDelete}>
+                {busy ? "Deleting…" : "Delete order"}
+              </Btn>
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

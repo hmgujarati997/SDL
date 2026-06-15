@@ -478,6 +478,34 @@ async def get_order(bid: str, user: dict = Depends(get_current_user)):
     return detail
 
 
+@router.delete("/orders/{bid}")
+async def delete_order(bid: str, user: dict = Depends(require_roles("admin"))):
+    batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
+    if not batch:
+        raise HTTPException(404, "Order not found")
+    # Include any child remake orders so nothing is orphaned.
+    children = await db.order_batches.find({"parent_id": bid}, {"id": 1, "_id": 0}).to_list(100)
+    ids = [bid] + [c["id"] for c in children]
+    # Remove physical files from disk.
+    files = await db.order_files.find({"batch_id": {"$in": ids}}, {"stored_name": 1, "_id": 0}).to_list(2000)
+    for f in files:
+        try:
+            (UPLOAD_DIR / f["stored_name"]).unlink(missing_ok=True)
+        except Exception:
+            pass
+    # batch_id-keyed collections
+    for coll in ("order_cases", "order_items", "order_files",
+                 "dispatch_details", "impression_shipments"):
+        await db[coll].delete_many({"batch_id": {"$in": ids}})
+    # order_id-keyed collections
+    for coll in ("order_activity_logs", "order_status_history",
+                 "invoices", "payments", "notifications"):
+        await db[coll].delete_many({"order_id": {"$in": ids}})
+    await db.order_batches.delete_many({"id": {"$in": ids}})
+    return {"ok": True, "deleted": batch.get("batch_no"), "count": len(ids)}
+
+
+
 # ---------------- Files ----------------
 @router.post("/orders/{bid}/files")
 async def upload_file(bid: str, file: UploadFile = File(...), level: str = Form("batch"),
