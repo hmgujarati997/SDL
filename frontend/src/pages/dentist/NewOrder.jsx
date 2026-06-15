@@ -322,7 +322,9 @@ export default function NewOrder() {
             </div>
           </Card>
         ))}
-        <Btn data-testid="add-case-btn" onClick={() => setCases([...cases, newCase()])}><Plus className="h-4 w-4" />Add Another Patient</Btn>
+        <div className="flex justify-center">
+          <Btn className="text-base" data-testid="add-case-btn" onClick={() => setCases([...cases, newCase()])}><Plus className="h-5 w-5" />Add Another Patient</Btn>
+        </div>
 
         {/* Step 4: files */}
         <Card>
@@ -369,7 +371,7 @@ export default function NewOrder() {
 
         {/* Step 5: order notes (after file upload) */}
         <Card>
-          <h3 className="font-heading text-lg font-bold">5 · Order Notes <span className="text-sm font-normal text-brand-taupe">(optional)</span></h3>
+          <h3 className="font-heading text-lg font-bold">5 · Order Notes <span className="text-sm font-normal text-brand-taupe">Write something about your case, no need to call.</span></h3>
           <textarea data-testid="order-notes" className={inputCls + " mt-3"} rows={3} placeholder="Any overall instructions for this order…" value={settings.notes} onChange={(e) => setSettings({ ...settings, notes: e.target.value })} />
         </Card>
       </div>
