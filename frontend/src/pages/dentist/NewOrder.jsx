@@ -6,7 +6,7 @@ import { Card, Btn, Field, inputCls } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 import ToothChart from "@/components/ToothChart";
 import { toast } from "sonner";
-import { Plus, Trash2, Sparkles, Check, ChevronRight, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Sparkles, Check, ChevronRight, Upload, X, Image as ImageIcon, Package } from "lucide-react";
 
 const uid = () => Math.random().toString(36).slice(2);
 
@@ -21,6 +21,7 @@ export default function NewOrder() {
   const [products, setProducts] = useState([]);
   const [patients, setPatients] = useState([]);
   const [shades, setShades] = useState([]);
+  const [lab, setLab] = useState({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const tokenRef = useRef(uid());
@@ -47,8 +48,9 @@ export default function NewOrder() {
       api.get("/products?active_only=true"),
       api.get("/patients"),
       api.get("/meta"),
-    ]).then(([p, pa, m]) => {
-      setProducts(p.data); setPatients(pa.data); setShades(m.data.shades);
+      api.get("/settings/public"),
+    ]).then(([p, pa, m, s]) => {
+      setProducts(p.data); setPatients(pa.data); setShades(m.data.shades); setLab(s.data.lab || {});
     }).finally(() => setLoading(false));
   }, []);
 
@@ -193,24 +195,32 @@ export default function NewOrder() {
         <Card>
           <h3 className="font-heading text-lg font-bold">1 · Order Settings</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Field label="Case Input Type">
+            <Field label="How are you sending the case?">
               <select data-testid="case-input-type" className={inputCls} value={settings.case_input_type} onChange={(e) => setSettings({ ...settings, case_input_type: e.target.value })}>
                 <option>Digital Scan Upload</option><option>Physical Impression</option>
               </select>
             </Field>
-            {impression && (
-              <Field label="Impression Delivery">
-                <div data-testid="impression-delivery" className="rounded-lg border border-brand-taupe/20 bg-brand-ivory px-3 py-2 text-sm text-brand-graphite">Courier to lab</div>
-              </Field>
-            )}
-            <Field label="Delivery Address (from your profile)">
+            <Field label="Where we'll ship your finished work back">
               <div data-testid="profile-delivery-address" className="rounded-lg border border-brand-taupe/20 bg-brand-ivory px-3 py-2 text-sm text-brand-graphite">
                 {profileAddress || <span className="text-brand-taupe">No address set — add it in your <Link to="/app/profile" className="font-semibold text-brand-red underline">profile</Link>.</span>}
               </div>
+              <p className="mt-1 text-xs text-brand-taupe">This is your clinic address from your profile. Completed cases are couriered here.</p>
             </Field>
-            <label className="flex items-center gap-2 pt-6 text-sm"><input type="checkbox" checked={settings.delivery_required} onChange={(e) => setSettings({ ...settings, delivery_required: e.target.checked })} /> Delivery required</label>
           </div>
-          {impression && <p className="mt-3 rounded-lg bg-brand-gold/10 p-3 text-xs text-brand-graphite">Physical impression: file upload is optional. You'll get a shipping slip after placing the order.</p>}
+
+          {impression && (
+            <div data-testid="impression-shipto-box" className="mt-4 rounded-xl border border-brand-gold/40 bg-brand-gold/10 p-4">
+              <p className="flex items-center gap-2 font-heading text-base font-bold text-brand-graphite"><Package className="h-4 w-4 text-brand-red" />Post your physical impression to the lab</p>
+              <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-brand-taupe">Lab shipping address</p>
+              <p className="mt-0.5 whitespace-pre-line text-sm font-medium text-brand-graphite" data-testid="lab-shipto-address">
+                {lab.receiving_address || lab.address || "Address not set yet — please contact the lab."}
+              </p>
+              {(lab.receiving_phone || lab.phone) && (
+                <p className="mt-1 text-sm text-brand-graphite" data-testid="lab-shipto-phone">Phone: <b>{lab.receiving_phone || lab.phone}</b></p>
+              )}
+              <p className="mt-3 text-xs text-brand-graphite">After you place the order, add your courier tracking ID on the order page so we can track your parcel. Uploading scan files is optional for impressions.</p>
+            </div>
+          )}
         </Card>
 
         {/* Step 2-3: cases */}
