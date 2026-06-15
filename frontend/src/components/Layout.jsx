@@ -32,7 +32,6 @@ const NAV = {
     { to: "/app/settings", icon: Settings, label: "Settings" },
   ],
   employee: [
-    { to: "/app", icon: LayoutDashboard, label: "Dashboard", end: true },
     { to: "/app/orders", icon: Package, label: "Orders" },
     { to: "/app/board", icon: KanbanSquare, label: "Production Board" },
   ],

@@ -337,6 +337,8 @@ async def list_orders(status: Optional[str] = None, q: Optional[str] = None,
                       user: dict = Depends(get_current_user)):
     query = {}
     is_dentist = user["role"] == "dentist"
+    is_employee = user["role"] == "employee"
+    TERMINAL = ["Delivered", "Cancelled"]
     if is_dentist:
         dent = await db.dentists.find_one({"user_id": user["id"]}, {"_id": 0})
         query["dentist_id"] = dent["id"] if dent else "__none__"
@@ -350,8 +352,14 @@ async def list_orders(status: Optional[str] = None, q: Optional[str] = None,
                 query["status"] = {"$nin": list(DENTIST_VISIBLE_STATUSES)}
             else:
                 query["status"] = status
+        elif is_employee and status in TERMINAL:
+            # Staff only ever see running orders, never completed/cancelled ones.
+            query["status"] = {"$nin": TERMINAL}
         else:
             query["status"] = status
+    elif is_employee:
+        # Staff list shows running orders only — delivered/cancelled drop off.
+        query["status"] = {"$nin": TERMINAL}
     if designer_id:
         query["designer_id"] = designer_id
     if remake is not None:

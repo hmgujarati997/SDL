@@ -67,6 +67,7 @@ function DashboardSwitch() {
   const { user } = useAuth();
   if (user?.role === "dentist") return <DentistDashboard />;
   if (user?.role === "designer") return <DesignerOrders />;
+  if (user?.role === "employee") return <Navigate to="/app/orders" replace />;
   return <AdminDashboard />;
 }
 
