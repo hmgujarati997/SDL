@@ -346,7 +346,7 @@ export default function NewOrder() {
         <Card>
           <h3 className="font-heading text-lg font-bold">4 · Upload Files {impression && <span className="text-sm font-normal text-brand-taupe">(optional for impressions)</span>}</h3>
           <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-taupe/30 p-6 text-brand-taupe hover:border-brand-red">
-            <Upload className="h-5 w-5" /> Choose scan files (STL, OBJ, PLY, ZIP, PDF)
+            <Upload className="h-8 w-8 text-brand-red" /> Choose scan files (STL, OBJ, PLY, ZIP, PDF)
             <input type="file" multiple className="hidden" data-testid="order-file-input" onChange={(e) => setFiles([...files, ...Array.from(e.target.files)])} />
           </label>
           {files.length > 0 && (
