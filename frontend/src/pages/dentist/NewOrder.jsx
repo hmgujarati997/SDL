@@ -365,7 +365,7 @@ export default function NewOrder() {
             <h4 className="flex items-center gap-2 font-heading text-base font-bold text-brand-graphite"><ImageIcon className="h-4 w-4 text-brand-red" /> Case Photos <span className="text-sm font-normal text-brand-taupe">(optional)</span></h4>
             <p className="mt-1 text-xs text-brand-taupe">Add intra-oral / shade / patient photos along with your scan. JPG, PNG or WEBP.</p>
             <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-taupe/30 p-5 text-brand-taupe hover:border-brand-red">
-              <ImageIcon className="h-5 w-5" /> Add photos
+              <ImageIcon className="h-8 w-8 text-brand-red" /> Add photos
               <input type="file" accept="image/*" multiple className="hidden" data-testid="order-photo-input"
                 onChange={(e) => setPhotos([...photos, ...Array.from(e.target.files)])} />
             </label>
