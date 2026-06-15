@@ -53,8 +53,16 @@ REMAKE_REASONS = [
 ]
 
 ALLOWED_FILE_EXT = {
-    ".stl", ".obj", ".ply", ".zip", ".pdf", ".jpg", ".jpeg", ".png",
-    ".dcm", ".3oxz", ".dxd", ".rar", ".7z", ".webp",
+    # 3D / mesh & scan formats
+    ".stl", ".obj", ".ply", ".off", ".3mf", ".dcm", ".3oxz", ".dxd",
+    # Dental CAD/CAM lab formats (3Shape, exocad, Medit, Dentsply, etc.)
+    ".constructioninfo", ".dcm", ".3shape", ".exo", ".exocad", ".lab",
+    ".cmg", ".cmg3ml", ".3ml", ".pcd", ".scan", ".tmj", ".xorder",
+    ".dxf", ".igs", ".iges", ".step", ".stp",
+    # Generic data / archives / docs
+    ".xml", ".json", ".txt", ".csv", ".zip", ".rar", ".7z", ".pdf",
+    # Images
+    ".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff", ".gif",
 }
 
 WHATSAPP_EVENTS = [
