@@ -8,7 +8,8 @@ from datetime import datetime, timezone, timedelta
 
 from deps import (db, gen_id, now_iso, fmt_ist, get_current_user, require_roles,
                   log_activity, get_setting, create_notification, UPLOAD_DIR)
-from constants import ALLOWED_FILE_EXT, ZIRCONIA_STAGES, ALL_STATUSES
+from constants import (ALLOWED_FILE_EXT, ZIRCONIA_STAGES, ALL_STATUSES,
+                       DENTIST_VISIBLE_STATUSES, dentist_facing_status)
 from engine import compute_quote
 from services import send_whatsapp, invoice_pdf, dispatch_label_pdf
 import razorpay as _razorpay
@@ -335,13 +336,22 @@ async def list_orders(status: Optional[str] = None, q: Optional[str] = None,
                       designer_id: Optional[str] = None, remake: Optional[bool] = None,
                       user: dict = Depends(get_current_user)):
     query = {}
-    if user["role"] == "dentist":
+    is_dentist = user["role"] == "dentist"
+    if is_dentist:
         dent = await db.dentists.find_one({"user_id": user["id"]}, {"_id": 0})
         query["dentist_id"] = dent["id"] if dent else "__none__"
     elif user["role"] == "designer":
         query["designer_id"] = user["id"]
     if status:
-        query["status"] = status
+        if is_dentist:
+            # Translate the dentist-facing filter back to internal statuses.
+            from constants import DENTIST_WIP_LABEL
+            if status == DENTIST_WIP_LABEL:
+                query["status"] = {"$nin": list(DENTIST_VISIBLE_STATUSES)}
+            else:
+                query["status"] = status
+        else:
+            query["status"] = status
     if designer_id:
         query["designer_id"] = designer_id
     if remake is not None:
@@ -355,6 +365,8 @@ async def list_orders(status: Optional[str] = None, q: Optional[str] = None,
     batches = await db.order_batches.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     for b in batches:
         b["cases"] = await db.order_cases.find({"batch_id": b["id"]}, {"_id": 0}).to_list(50)
+        if is_dentist:
+            b["status"] = dentist_facing_status(b["status"])
     return batches
 
 
@@ -401,6 +413,33 @@ async def designer_order_detail(bid: str, user: dict = Depends(require_roles("de
     return _designer_view(batch, files)
 
 
+def _mask_detail_for_dentist(detail):
+    """Strip the lab's internal SOP from an order detail before sending to a dentist.
+    Collapses internal production statuses to "Work in Progress" and removes
+    staff identities / internal notes from the status timeline and activity log."""
+    detail["status"] = dentist_facing_status(detail.get("status"))
+    masked, last = [], None
+    for h in detail.get("history", []):
+        new = dentist_facing_status(h.get("new"))
+        if new == last:
+            continue  # collapse consecutive internal steps into one WIP entry
+        masked.append({
+            "id": h.get("id"),
+            "new": new,
+            "old": dentist_facing_status(h.get("old")),
+            "created_at": h.get("created_at"),
+            "user_name": "Shree Dental Lab",
+            "note": h.get("note") if new in DENTIST_VISIBLE_STATUSES else "",
+        })
+        last = new
+    detail["history"] = masked
+    for a in detail.get("activity", []):
+        if (a.get("action") or "").startswith("Status changed:"):
+            a["action"] = "Status updated"
+            a["actor_name"] = "Shree Dental Lab"
+    return detail
+
+
 async def _order_detail(batch):
     bid = batch["id"]
     batch["cases"] = await db.order_cases.find({"batch_id": bid}, {"_id": 0}).to_list(100)
@@ -435,6 +474,7 @@ async def get_order(bid: str, user: dict = Depends(get_current_user)):
     detail = await _order_detail(batch)
     if user["role"] == "dentist":
         detail["activity"] = [a for a in detail["activity"] if a.get("dentist_visible")]
+        detail = _mask_detail_for_dentist(detail)
     return detail
 
 

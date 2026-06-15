@@ -65,6 +65,27 @@ ALLOWED_FILE_EXT = {
     ".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff", ".gif",
 }
 
+# Statuses a dentist is allowed to see verbatim. Every other (internal SOP)
+# status is collapsed to "Work in Progress" so the lab's production workflow
+# is never exposed to dentists.
+DENTIST_WIP_LABEL = "Work in Progress"
+DENTIST_VISIBLE_STATUSES = {
+    "Order Received",
+    "Impression Awaited",
+    "Impression Received",
+    "Dispatched",
+    "Delivered",
+    "Cancelled",
+}
+
+
+def dentist_facing_status(status):
+    """Map any internal status to the dentist-facing label."""
+    if not status:
+        return status
+    return status if status in DENTIST_VISIBLE_STATUSES else DENTIST_WIP_LABEL
+
+
 WHATSAPP_EVENTS = [
     "order_placed", "order_accepted", "file_issue", "payment_request",
     "payment_success", "payment_failed", "sent_to_designer", "design_received",

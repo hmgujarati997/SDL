@@ -3,6 +3,7 @@ import { useStatuses, colorClasses } from "@/lib/statusColors";
 
 const MAP = {
   "Order Received": "bg-brand-red/10 text-brand-red border-brand-red/20",
+  "Work in Progress": "bg-blue-50 text-blue-700 border-blue-200",
   "Impression Awaited": "bg-amber-100 text-amber-800 border-amber-200",
   "Impression Received": "bg-amber-100 text-amber-800 border-amber-200",
   "In-House Scanning": "bg-amber-100 text-amber-800 border-amber-200",

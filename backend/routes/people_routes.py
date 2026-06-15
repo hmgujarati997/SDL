@@ -213,12 +213,16 @@ async def dentist_dashboard(user: dict = Depends(require_roles("dentist"))):
     def cnt(*statuses):
         return sum(1 for b in batches if b["status"] in statuses)
     pending_payment = sum(b["amounts"]["pending"] for b in batches if b["amounts"]["pending"] > 0)
-    recent = sorted(batches, key=lambda b: b["created_at"], reverse=True)[:5]
+    from constants import dentist_facing_status, DENTIST_WIP_LABEL
+    in_progress = sum(1 for b in batches if dentist_facing_status(b["status"]) == DENTIST_WIP_LABEL)
+    recent = [{**b, "status": dentist_facing_status(b["status"])}
+              for b in sorted(batches, key=lambda b: b["created_at"], reverse=True)[:5]]
     invoices = await db.invoices.find({"dentist_id": dent["id"]}, {"_id": 0}).sort("created_at", -1).to_list(5)
     return {
         "total": len(batches),
         "pending": cnt("Order Received", "Impression Awaited"),
         "accepted": cnt("Order Accepted"),
+        "in_progress": in_progress,
         "in_manufacturing": cnt("Sent to Designer", "Design Received", "Cutting Started",
                                 "Sintering Started", "Glazing Started"),
         "ready": cnt("QC Done / Ready for Packaging", "Packed / Dispatch Label Printed"),

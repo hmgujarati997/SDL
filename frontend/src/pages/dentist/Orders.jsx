@@ -15,6 +15,9 @@ export default function Orders() {
   const [statuses, setStatuses] = useState([]);
 
   useEffect(() => { api.get("/meta").then(({ data }) => setStatuses(data.statuses)).catch(() => {}); }, []);
+  // Dentists must not see the lab's internal SOP — only show dentist-facing statuses.
+  const DENTIST_STATUSES = ["Order Received", "Work in Progress", "Impression Awaited", "Impression Received", "Dispatched", "Delivered", "Cancelled"];
+  const filterOptions = user?.role === "dentist" ? DENTIST_STATUSES : statuses;
   const load = useCallback(() => {
     const params = {};
     if (q) params.q = q;
@@ -36,7 +39,7 @@ export default function Orders() {
         </div>
         <select data-testid="order-status-filter" className={inputCls + " sm:w-56"} value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">All statuses</option>
-          {statuses.map((s) => <option key={s}>{s}</option>)}
+          {filterOptions.map((s) => <option key={s}>{s}</option>)}
         </select>
       </div>
 
