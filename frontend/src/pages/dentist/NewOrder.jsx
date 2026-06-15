@@ -221,7 +221,7 @@ export default function NewOrder() {
               <p className="mt-3 text-xs text-brand-graphite">After you place the order, add your courier tracking ID on the order page so we can track your parcel. Uploading scan files is optional for impressions.</p>
             </div>
           )}
-          <p data-testid="order-accept-note" className="mt-4 text-sm font-medium text-brand-graphite">Note: No need to call — you'll receive a message once your order is accepted. 😊</p>
+          <p data-testid="order-accept-note" className="mt-4 text-sm font-medium text-brand-graphite">Note: <span className="text-brand-red font-semibold">No need to call</span> — you'll receive a message once your order is accepted. 😊</p>
         </Card>
 
         {/* Step 2-3: cases */}
