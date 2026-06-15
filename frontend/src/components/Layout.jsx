@@ -79,12 +79,13 @@ export function PortalShell({ children }) {
   const items = NAV[user?.role] || [];
 
   const isActive = (it) => (it.end ? loc.pathname === it.to : loc.pathname.startsWith(it.to));
-  const { logo } = useBranding();
+  const { logo, favicon } = useBranding();
+  const sideIcon = favicon || logo;
 
   const SideContent = () => (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 bg-brand-charcoal px-5 py-4">
-        <img src={logo} alt="Shree Dental Lab" className="h-10 w-10 rounded-md object-cover" />
+        <img src={sideIcon} alt="Shree Dental Lab" className="h-10 w-10 rounded-md object-cover" />
         <div>
           <p className="font-heading text-sm font-bold text-white leading-tight">Shree Dental Lab</p>
           <p className="text-[10px] uppercase tracking-widest text-brand-gold">Precision · Quality · Trust</p>
