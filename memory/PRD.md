@@ -83,3 +83,34 @@ Backend 23/23 pytest PASSED. No critical/UI bugs. Mock: Razorpay payments, Whats
 - On design upload: batch.design_submitted=true + all admins notified ('Design uploaded'). Admin OrderDetail shows a green
   'design-submitted-banner' to review; admin sets status 'Design Received' (clears flag). Reassigning a designer resets the flag.
 - Verified: backend curl + testing_agent 7/7 PASS (iteration_4.json). NOTE: reset designer@shreedentallab.com password to password123.
+
+## Session 2026-06-15 (fork)
+- **File uploads fix**: expanded ALLOWED_FILE_EXT in constants.py to accept dental CAD/CAM formats
+  (.constructioninfo, .3shape, .exocad, .exo, .lab, .cmg, .3ml, .pcd, .scan, .3mf, .off, .dxf, .step/.stp,
+  .iges, .xml, .json, .txt, .csv + more image types). Verified .stl + .constructionInfo upload (HTTP 200).
+- **Hide SOP from dentists**: dentists now only ever see Order Received / Work in Progress / Impression
+  Awaited / Impression Received / Dispatched / Delivered / Cancelled. All internal production statuses
+  collapse to "Work in Progress". Enforced at BACKEND (constants.dentist_facing_status + DENTIST_VISIBLE_STATUSES):
+  get_order masks status + collapses history + scrubs "Status changed" activity (actor->"Shree Dental Lab");
+  list_orders maps status + translates the "Work in Progress" filter to $nin; dentist_dashboard returns in_progress
+  count + masks recent_orders. Frontend: StatusBadge has "Work in Progress" color, Orders.jsx dentist filter list,
+  DentistDashboard shows "Work in Progress" card. Admin/staff still see full SOP. Verified end-to-end.
+- **Delete order (admin)**: DELETE /api/orders/{id} (admin-only) hard-deletes batch + cases/items/files(+disk)/
+  invoices/payments/history/activity/notifications + linked remakes. OrderDetail.jsx has a red "Delete Order" card
+  with typed batch-no confirmation dialog (data-testid delete-order-btn / -dialog / -confirm-input / -confirm-btn).
+  Verified: 200 + cleanup, dentist 403.
+- **Removed "Made with Emergent" badge** from frontend/public/index.html.
+- **Clean production DB (no demo data)**: seed.py now gates ALL demo/sample data (designer+employee demo logins,
+  sample products/tiers/offers, sample dentists/patients/orders, test_credentials.md write) behind env flag
+  SEED_DEMO_DATA. Preview/dev backend/.env has SEED_DEMO_DATA="true". Production has it OFF -> only admin account +
+  core settings seed (verified via throwaway-DB sim: users=1 admin, products/dentists/orders=0). IMPORTANT for deploy:
+  if a prior deploy already populated the production DB with demo data, that DB must be cleared once; future deploys
+  start clean automatically.
+
+## Pending / Backlog
+- P0: SMTP email integration (welcome, password reset, order status) — needs user SMTP credentials. Playbook was pulled.
+- P1: Password reset auth flow (depends on SMTP).
+- P1: Apply premium homepage styling to inner public pages (About, Contact).
+- P1: Razorpay mock -> live (needs Key ID + Secret).
+- P1: WhatsApp API mock -> live (needs Vendor UID + Token).
+- Optional: per-row trash icon on Orders list (admin) for quicker delete.

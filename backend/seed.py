@@ -28,6 +28,12 @@ async def _setting(key, value):
 async def seed():
     await ensure_indexes()
 
+    # Demo/sample data (sample products, offers, dentists, orders and the
+    # designer/employee demo logins) is only seeded when SEED_DEMO_DATA is
+    # explicitly enabled. In production this flag is OFF, so going live starts
+    # with a clean database — only the admin account and core settings exist.
+    seed_demo = os.environ.get("SEED_DEMO_DATA", "false").strip().lower() == "true"
+
     # Settings
     public_url = os.environ.get("APP_PUBLIC_URL", "")
     await _setting("lab", {
@@ -67,21 +73,22 @@ async def seed():
             "created_at": now_iso(),
         })
 
-    # Designer + Employee
-    for email, name, role in [
-        ("designer@shreedentallab.com", "Raj Designer", "designer"),
-        ("employee@shreedentallab.com", "Amit Production", "employee"),
-    ]:
-        if not await db.users.find_one({"email": email}):
-            await db.users.insert_one({
-                "id": gen_id(), "email": email, "password_hash": hash_password("password123"),
-                "name": name, "role": role, "mobile": "+919000000001",
-                "permissions": ["update_status"] if role == "employee" else [],
-                "active": True, "must_change_password": False, "created_at": now_iso(),
-            })
+    # Designer + Employee (demo logins — dev/preview only)
+    if seed_demo:
+        for email, name, role in [
+            ("designer@shreedentallab.com", "Raj Designer", "designer"),
+            ("employee@shreedentallab.com", "Amit Production", "employee"),
+        ]:
+            if not await db.users.find_one({"email": email}):
+                await db.users.insert_one({
+                    "id": gen_id(), "email": email, "password_hash": hash_password("password123"),
+                    "name": name, "role": role, "mobile": "+919000000001",
+                    "permissions": ["update_status"] if role == "employee" else [],
+                    "active": True, "must_change_password": False, "created_at": now_iso(),
+                })
 
-    # Products + tiers
-    if await db.products.count_documents({}) == 0:
+    # Products + tiers (sample catalog — dev/preview only)
+    if seed_demo and await db.products.count_documents({}) == 0:
         mono_ids, layered_ids = [], []
 
         def tier(pid, name, rate, popular=False, desc=""):
@@ -146,11 +153,12 @@ async def seed():
             "stages": ZIRCONIA_STAGES, "product_category": "Crown & Bridge", "created_at": now_iso(),
         })
 
-    # Sample dentists
-    if await db.dentists.count_documents({}) == 0:
+    # Sample dentists / patients / orders (dev/preview only)
+    if seed_demo and await db.dentists.count_documents({}) == 0:
         await _seed_sample_orders()
 
-    await _write_creds()
+    if seed_demo:
+        await _write_creds()
 
 
 async def _seed_sample_orders():
