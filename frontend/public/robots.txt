@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /login
+Allow: /register
+Disallow: /app
+Disallow: /app/
+Disallow: /orders/
+
+Sitemap: https://shreedentallab.com/sitemap.xml

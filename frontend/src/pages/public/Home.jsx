@@ -36,7 +36,7 @@ export default function Home() {
           <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
             className="mb-5 sm:mb-7">
             <span className="block font-heading text-2xl font-bold tracking-tight text-brand-red sm:text-3xl lg:text-4xl">Shree Dental Lab</span>
-            <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.22em] text-brand-taupe sm:text-sm">Precision · Quality · Trust</span>
+            <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.22em] text-brand-taupe sm:text-sm">Precision · Quality · Trust · Serving dentists across India</span>
           </motion.p>
           <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
             className="font-clamp-hero font-heading font-medium leading-[1.06] tracking-[-0.03em] text-brand-graphite">
