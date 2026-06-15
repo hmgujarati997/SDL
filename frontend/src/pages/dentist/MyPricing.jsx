@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api, { inr } from "@/lib/api";
-import { PageHeader, Card } from "@/components/UI";
+import { PageHeader, Card, Btn } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
-import { Star } from "lucide-react";
+import { Star, PlusCircle } from "lucide-react";
 
 export default function MyPricing() {
   const [cards, setCards] = useState(null);
@@ -41,9 +42,15 @@ export default function MyPricing() {
                 ))}
               </tbody>
             </table>
-            <p className="mt-3 text-xs text-brand-taupe">GST {c.gst_rate}% extra · Urgent surcharge {c.urgent_surcharge_type === "percent" ? `${c.urgent_surcharge}%` : inr(c.urgent_surcharge)}</p>
+            <p className="mt-3 text-xs text-brand-taupe">GST {c.gst_rate}% extra</p>
           </Card>
         ))}
+      </div>
+
+      <div className="mt-8 flex justify-center">
+        <Link to="/app/new-order">
+          <Btn data-testid="pricing-place-order-btn" className="text-base"><PlusCircle className="h-5 w-5" />Place Order</Btn>
+        </Link>
       </div>
     </div>
   );

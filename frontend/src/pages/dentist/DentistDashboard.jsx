@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { PageHeader, StatCard, Card, Btn } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 import { StatusBadge, PayBadge } from "@/components/StatusBadge";
-import { Package, Clock, Factory, Truck, CheckCircle2, IndianRupee, PlusCircle, Wallet, Sparkles, AlertTriangle } from "lucide-react";
+import { Package, Clock, Factory, Truck, CheckCircle2, IndianRupee, PlusCircle, Wallet, Sparkles, AlertTriangle, ChevronRight } from "lucide-react";
 
 export default function DentistDashboard() {
   const { user } = useAuth();
@@ -58,13 +58,17 @@ export default function DentistDashboard() {
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-br from-brand-charcoal to-[#1c1416] text-white">
-          <Sparkles className="h-7 w-7 text-brand-gold" />
-          <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-brand-gold">Lifetime savings</p>
-          <p className="font-heading text-4xl font-bold tabular" data-testid="lifetime-savings">{inr(d.lifetime_savings)}</p>
-          <p className="mt-2 text-sm text-white/70">Total saved with volume pricing across your orders.</p>
-          <Link to="/app/my-pricing"><Btn variant="gold" className="mt-5">View My Pricing</Btn></Link>
-        </Card>
+        <Link to="/app/my-pricing" data-testid="launch-offer-card" className="group block">
+          <Card className="relative h-full overflow-hidden bg-gradient-to-br from-brand-charcoal to-[#1c1416] text-white transition-transform duration-200 group-hover:-translate-y-0.5">
+            <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-brand-gold/20 blur-2xl" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-gold px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-charcoal">
+              <Sparkles className="h-3.5 w-3.5" /> Launch Offer
+            </span>
+            <p className="mt-4 font-heading text-2xl font-bold leading-tight">Special launch pricing<br />on every order</p>
+            <p className="mt-2 text-sm text-white/70">Enjoy volume slab discounts and limited-time launch rates. Tap to see your personalised rate card.</p>
+            <span className="mt-5 inline-flex items-center gap-2 font-semibold text-brand-gold">View My Pricing <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
+          </Card>
+        </Link>
       </div>
     </div>
   );
