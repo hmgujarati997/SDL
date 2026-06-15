@@ -66,7 +66,7 @@ export default function DentistDashboard() {
             </span>
             <p className="mt-4 font-heading text-2xl font-bold leading-tight">Special launch pricing<br />on every order</p>
             <p className="mt-2 text-sm text-white/70">Enjoy volume slab discounts and limited-time launch rates. Tap to see your personalised rate card.</p>
-            <span className="mt-5 inline-flex items-center gap-2 font-semibold text-brand-gold">View My Pricing <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
+            <span className="mt-5 inline-flex items-center gap-2 text-lg font-bold text-brand-gold">View My Pricing <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" /></span>
           </Card>
         </Link>
       </div>
