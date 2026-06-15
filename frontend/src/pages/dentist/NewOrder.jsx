@@ -232,8 +232,8 @@ export default function NewOrder() {
               {cases.length > 1 && <button onClick={() => setCases((cs) => cs.filter((_, i) => i !== ci))} className="text-brand-red"><Trash2 className="h-4 w-4" /></button>}
             </div>
             <div className="mt-3 flex gap-2">
-              <button onClick={() => setCase(ci, { mode: "existing" })} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${c.mode === "existing" ? "bg-brand-red text-white" : "bg-brand-ivory text-brand-graphite"}`}>Existing Patient</button>
               <button onClick={() => setCase(ci, { mode: "new" })} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${c.mode === "new" ? "bg-brand-red text-white" : "bg-brand-ivory text-brand-graphite"}`}>New Patient</button>
+              <button onClick={() => setCase(ci, { mode: "existing" })} className={`rounded-full px-4 py-1.5 text-sm font-semibold ${c.mode === "existing" ? "bg-brand-red text-white" : "bg-brand-ivory text-brand-graphite"}`}>Existing Patient</button>
             </div>
             {c.mode === "existing" ? (
               <Field label="Select Patient"><select data-testid={`case-patient-${ci}`} className={inputCls + " mt-2"} value={c.patient_id} onChange={(e) => setCase(ci, { patient_id: e.target.value })}>
@@ -318,11 +318,11 @@ export default function NewOrder() {
                   </div>
                 );
               })}
-              <Btn variant="outline" onClick={() => addItem(ci)}><Plus className="h-4 w-4" />Add Tooth/Product Item</Btn>
+              <Btn className="w-full py-3 text-base" onClick={() => addItem(ci)}><Plus className="h-5 w-5" />Add Tooth/Product Item</Btn>
             </div>
           </Card>
         ))}
-        <Btn variant="outline" data-testid="add-case-btn" onClick={() => setCases([...cases, newCase()])}><Plus className="h-4 w-4" />Add Another Patient</Btn>
+        <Btn className="w-full py-3 text-base" data-testid="add-case-btn" onClick={() => setCases([...cases, newCase()])}><Plus className="h-5 w-5" />Add Another Patient</Btn>
 
         {/* Step 4: files */}
         <Card>
