@@ -123,3 +123,12 @@ Backend 23/23 pytest PASSED. No critical/UI bugs. Mock: Razorpay payments, Whats
 - **Registration/profile**: removed Clinic Address field; Profile delivery address has a "same as billing address" checkbox that mirrors + locks the field.
 - **Impression shipping (dentist→lab)**: admin sets lab `receiving_address`/`receiving_phone` (Settings→Lab). Dentist on Impression Awaited orders sees a "Ship Your Impression" card with the lab ship-to address/phone + courier + tracking ID form (POST /api/orders/{id}/impression/ship). Saves tracking on impression_shipments, notifies all admins; admin order page shows "Impression on the way" with courier/tracking/ship date.
 - All verified via curl + screenshots.
+
+## Session 2026-06-15 (fork) — Razorpay post-payment freeze fix
+- **Bug**: After a successful Razorpay test payment, the order was created in DB but the page stayed frozen (had to refresh to see the order). Failure/cancel cases worked fine.
+- **Root cause**: SPA + Razorpay — the Razorpay checkout overlay/iframe stayed mounted on top of the app after `handler` ran; `nav()` happened underneath but the overlay covered everything → looked frozen.
+- **Fix** (`/app/frontend/src/pages/dentist/NewOrder.jsx`):
+  1. Explicitly call `rzp.close()` inside the success `handler` to tear down the overlay before navigating.
+  2. Added a `paid` flag so the programmatic close doesn't trigger the `modal.ondismiss` "Payment cancelled" toast.
+  3. Made attachment uploads non-blocking (fire-and-forget `uploadAttachments`) so a slow/large file upload can't hang the redirect to the order detail page.
+- Verified: frontend compiles, dentist portal + New Order route load. Real test payment requires user manual confirmation (Razorpay flow runs on Razorpay's domain, not automatable).

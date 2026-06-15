@@ -162,18 +162,23 @@ export default function NewOrder() {
     document.body.appendChild(s);
   });
 
-  const finalizeOrder = async (payment) => {
-    const { data } = await api.post("/orders", buildPayload(payment));
+  const uploadAttachments = async (orderId) => {
     for (const f of files) {
       const fd = new FormData();
       fd.append("file", f); fd.append("level", "batch"); fd.append("category", "dentist");
-      try { await api.post(`/orders/${data.id}/files`, fd); } catch {}
+      try { await api.post(`/orders/${orderId}/files`, fd); } catch {}
     }
     for (const p of photos) {
       const fd = new FormData();
       fd.append("file", p); fd.append("level", "batch"); fd.append("category", "photo");
-      try { await api.post(`/orders/${data.id}/files`, fd); } catch {}
+      try { await api.post(`/orders/${orderId}/files`, fd); } catch {}
     }
+  };
+
+  const finalizeOrder = async (payment) => {
+    const { data } = await api.post("/orders", buildPayload(payment));
+    // Upload attachments in the background so a slow/large upload can't hang the redirect.
+    uploadAttachments(data.id);
     toast.success(`Payment successful · Order ${data.batch_no} placed!`);
     nav(`/app/orders/${data.id}`);
   };
@@ -190,7 +195,9 @@ export default function NewOrder() {
       }
       const ok = await loadRazorpay();
       if (!ok) { toast.error("Could not load the payment gateway. Please retry."); setSubmitting(false); return; }
-      const rzp = new window.Razorpay({
+      let rzp;
+      let paid = false;
+      rzp = new window.Razorpay({
         key: chk.key_id,
         amount: Math.round(chk.amount * 100),
         currency: chk.currency || "INR",
@@ -200,6 +207,9 @@ export default function NewOrder() {
         prefill: chk.prefill,
         theme: { color: "#C1272D" },
         handler: async (resp) => {
+          paid = true;
+          // Tear down the Razorpay overlay before navigating so the SPA isn't left frozen behind it.
+          try { rzp.close(); } catch {}
           try {
             await finalizeOrder({
               razorpay_order_id: resp.razorpay_order_id,
@@ -208,7 +218,7 @@ export default function NewOrder() {
             });
           } catch (e) { toast.error(formatApiError(e.response?.data?.detail)); setSubmitting(false); }
         },
-        modal: { ondismiss: () => { setSubmitting(false); toast("Payment cancelled — your order was not placed."); } },
+        modal: { ondismiss: () => { if (paid) return; setSubmitting(false); toast("Payment cancelled — your order was not placed."); } },
       });
       rzp.on("payment.failed", () => { setSubmitting(false); toast.error("Payment failed — your order was not placed."); });
       rzp.open();
