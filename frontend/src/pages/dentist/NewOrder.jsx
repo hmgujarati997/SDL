@@ -37,7 +37,7 @@ export default function NewOrder() {
   const [quote, setQuote] = useState(null);
 
   function newCase() {
-    return { uid: uid(), mode: "existing", patient_id: "", new_patient: { name: "", age: "", gender: "" }, notes: "", items: [newItem()] };
+    return { uid: uid(), mode: "new", patient_id: "", new_patient: { name: "", age: "", gender: "" }, notes: "", items: [newItem()] };
   }
   function newItem() {
     return { uid: uid(), product_id: "", tier_id: "", teeth: [], trial_required: false, special_instructions: "", stump_shade: "", defaultShade: "A2" };
@@ -318,11 +318,11 @@ export default function NewOrder() {
                   </div>
                 );
               })}
-              <Btn className="w-full py-3 text-base" onClick={() => addItem(ci)}><Plus className="h-5 w-5" />Add Tooth/Product Item</Btn>
+              <Btn onClick={() => addItem(ci)}><Plus className="h-4 w-4" />Add Tooth/Product Item</Btn>
             </div>
           </Card>
         ))}
-        <Btn className="w-full py-3 text-base" data-testid="add-case-btn" onClick={() => setCases([...cases, newCase()])}><Plus className="h-5 w-5" />Add Another Patient</Btn>
+        <Btn data-testid="add-case-btn" onClick={() => setCases([...cases, newCase()])}><Plus className="h-4 w-4" />Add Another Patient</Btn>
 
         {/* Step 4: files */}
         <Card>
