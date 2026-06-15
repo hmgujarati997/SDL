@@ -804,6 +804,8 @@ async def impression_ship(bid: str, body: dict = Body(...), user: dict = Depends
     if not tracking:
         raise HTTPException(400, "Tracking ID is required")
     courier = (body.get("courier_name") or "").strip()
+    if not courier:
+        raise HTTPException(400, "Courier / service name is required")
     await db.impression_shipments.update_one({"batch_id": bid}, {"$set": {
         "courier_name": courier, "tracking_no": tracking,
         "shipped_at": now_iso(), "shipped_by_dentist": True}}, upsert=True)

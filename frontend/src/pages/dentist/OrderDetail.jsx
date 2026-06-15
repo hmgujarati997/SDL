@@ -452,6 +452,7 @@ function ShipImpressionCard({ order, lab, onDone }) {
   const [tracking, setTracking] = useState(existing.tracking_no || "");
   const [busy, setBusy] = useState(false);
   const submit = async () => {
+    if (!courier.trim()) { toast.error("Please enter the courier / service name"); return; }
     if (!tracking.trim()) { toast.error("Please enter the tracking ID"); return; }
     setBusy(true);
     try {
@@ -475,7 +476,7 @@ function ShipImpressionCard({ order, lab, onDone }) {
         )}
       </div>
       <div className="space-y-2">
-        <Field label="Courier / Service (optional)">
+        <Field label="Courier / Service" required>
           <input data-testid="impression-courier-input" className={inputCls} placeholder="e.g. DTDC, Blue Dart, India Post" value={courier} onChange={(e) => setCourier(e.target.value)} />
         </Field>
         <Field label="Tracking ID" required>
