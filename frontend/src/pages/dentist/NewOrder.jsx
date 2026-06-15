@@ -42,7 +42,7 @@ export default function NewOrder() {
   const [quote, setQuote] = useState(null);
 
   function newCase() {
-    return { uid: uid(), mode: "new", patient_id: "", new_patient: { name: "", age: "", gender: "" }, notes: "", items: [newItem()] };
+    return { uid: uid(), mode: "new", patient_id: "", new_patient: { name: "", age: "", gender: "" }, notes: "", items: [], brush: { product_id: "", tier_id: "" } };
   }
   function newItem() {
     return { uid: uid(), product_id: "", tier_id: "", teeth: [], trial_required: false, special_instructions: "", stump_shade: "", defaultShade: "A2" };
@@ -91,17 +91,47 @@ export default function NewOrder() {
   // mutators
   const setCase = (ci, patch) => setCases((cs) => cs.map((c, i) => (i === ci ? { ...c, ...patch } : c)));
   const setItem = (ci, ii, patch) => setCases((cs) => cs.map((c, i) => i !== ci ? c : { ...c, items: c.items.map((it, j) => (j === ii ? { ...it, ...patch } : it)) }));
-  const addItem = (ci) => setCases((cs) => cs.map((c, i) => (i === ci ? { ...c, items: [...c.items, newItem()] } : c)));
   const delItem = (ci, ii) => setCases((cs) => cs.map((c, i) => (i === ci ? { ...c, items: c.items.filter((_, j) => j !== ii) } : c)));
 
-  const toggleTooth = (ci, ii, tooth) => setCases((cs) => cs.map((c, i) => i !== ci ? c : {
-    ...c, items: c.items.map((it, j) => {
-      if (j !== ii) return it;
-      const exists = it.teeth.find((t) => t.tooth === tooth);
-      const teeth = exists ? it.teeth.filter((t) => t.tooth !== tooth) : [...it.teeth, { tooth, shade: it.defaultShade }];
-      return { ...it, teeth: teeth.sort((a, b) => a.tooth - b.tooth) };
-    }),
-  }));
+  // The "brush" = the currently selected product + tier. Tapping a tooth paints it
+  // with the active brush; teeth painted with other brushes keep their own colour.
+  const setBrush = (ci, patch) => setCases((cs) => cs.map((c, i) => (i === ci ? { ...c, brush: { ...c.brush, ...patch } } : c)));
+
+  const paintTooth = (ci, tooth) => {
+    const c = cases[ci];
+    const { product_id, tier_id } = c.brush || {};
+    if (!product_id || !tier_id) { toast.error("Pick a product and tier first, then tap teeth."); return; }
+    setCases((cs) => cs.map((cc, i) => {
+      if (i !== ci) return cc;
+      let items = cc.items.map((it) => ({ ...it, teeth: [...it.teeth] }));
+      let target = items.find((it) => it.product_id === product_id && it.tier_id === tier_id);
+      const inTarget = target && target.teeth.some((t) => t.tooth === tooth);
+      if (inTarget) {
+        target.teeth = target.teeth.filter((t) => t.tooth !== tooth);
+      } else {
+        items.forEach((it) => { it.teeth = it.teeth.filter((t) => t.tooth !== tooth); });
+        target = items.find((it) => it.product_id === product_id && it.tier_id === tier_id);
+        if (!target) {
+          target = { ...newItem(), product_id, tier_id };
+          items.push(target);
+        }
+        target.teeth = [...target.teeth, { tooth, shade: target.defaultShade || "A2" }].sort((a, b) => a.tooth - b.tooth);
+        items = items.map((it) => (it === target || (it.product_id === product_id && it.tier_id === tier_id) ? target : it));
+      }
+      items = items.filter((it) => it.teeth.length > 0);
+      return { ...cc, items };
+    }));
+  };
+
+  const toothColorMap = (c) => {
+    const map = {};
+    c.items.forEach((it) => {
+      const col = tierColor(tierById[it.tier_id]?.name);
+      it.teeth.forEach((t) => { map[t.tooth] = col; });
+    });
+    return map;
+  };
+
   const setToothShade = (ci, ii, tooth, shade) => setItem(ci, ii, { teeth: cases[ci].items[ii].teeth.map((t) => (t.tooth === tooth ? { ...t, shade } : t)) });
   const applyAllShade = (ci, ii, shade) => setItem(ci, ii, { defaultShade: shade, teeth: cases[ci].items[ii].teeth.map((t) => ({ ...t, shade })) });
 
@@ -268,89 +298,102 @@ export default function NewOrder() {
               </div>
             )}
 
-            {/* Items */}
-            <div className="mt-5 space-y-5">
-              {c.items.map((it, ii) => {
-                const product = products.find((p) => p.id === it.product_id);
-                const tColor = tierColor(tierById[it.tier_id]?.name);
-                return (
-                  <div key={it.uid} className="rounded-xl border border-brand-taupe/20 p-4">
-                    <div className="flex items-center justify-between">
-                      <p className="font-semibold text-brand-graphite">Item {ii + 1}</p>
-                      {c.items.length > 1 && <button onClick={() => delItem(ci, ii)} className="text-brand-red"><Trash2 className="h-4 w-4" /></button>}
-                    </div>
-                    <Field label="Product"><select data-testid={`item-product-${ci}-${ii}`} className={inputCls + " mt-1"} value={it.product_id}
-                      onChange={(e) => setItem(ci, ii, { product_id: e.target.value, tier_id: "" })}>
+            {/* Brush selector + single shared mouth chart */}
+            {(() => {
+              const brushProduct = products.find((p) => p.id === c.brush.product_id);
+              const brushColor = tierColor(tierById[c.brush.tier_id]?.name);
+              const colorMap = toothColorMap(c);
+              return (
+                <div className="mt-5">
+                  <Field label="Product">
+                    <select data-testid={`brush-product-${ci}`} className={inputCls + " mt-1"} value={c.brush.product_id}
+                      onChange={(e) => setBrush(ci, { product_id: e.target.value, tier_id: "" })}>
                       <option value="">Select product...</option>{products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select></Field>
+                    </select>
+                  </Field>
 
-                    {product && product.tiers.length > 0 && (
-                      <div className="mt-3">
-                        <p className="mb-2 text-sm text-brand-taupe">Choose quality tier</p>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {product.tiers.map((t) => {
-                            const sel = it.tier_id === t.id;
-                            const tc = tierColor(t.name);
-                            const selCls = tc === "gold" ? "border-brand-gold bg-brand-gold/10" : "border-brand-red bg-brand-red/5";
-                            const hoverCls = tc === "gold" ? "hover:border-brand-gold/50" : "hover:border-brand-red/40";
-                            return (
-                              <button key={t.id} data-testid={`tier-${t.id}`} onClick={() => setItem(ci, ii, { tier_id: t.id })}
-                                className={`rounded-xl border-2 p-3 text-left transition ${sel ? selCls : `border-brand-taupe/20 ${hoverCls}`}`}>
-                                <div className="flex items-center justify-between">
-                                  <span className="font-heading font-bold">{t.name}</span>
-                                  {sel && <Check className={`h-4 w-4 ${tc === "gold" ? "text-brand-gold" : "text-brand-red"}`} />}
-                                </div>
-                                <p className="mt-1 text-xs text-brand-taupe">{t.description}</p>
-                                <p className={`mt-2 font-bold ${tc === "gold" ? "text-brand-gold" : "text-brand-red"}`}>{inr(t.rate_per_unit)}<span className="text-xs font-normal text-brand-taupe">/unit</span></p>
-                              </button>
-                            );
-                          })}
-                        </div>
+                  {brushProduct && brushProduct.tiers.length > 0 && (
+                    <div className="mt-3">
+                      <p className="mb-2 text-sm text-brand-taupe">Pick a quality tier, then tap the teeth for it. Switch tier to mark other teeth — earlier colours stay.</p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {brushProduct.tiers.map((t) => {
+                          const sel = c.brush.tier_id === t.id;
+                          const tc = tierColor(t.name);
+                          const selCls = tc === "gold" ? "border-brand-gold bg-brand-gold/10" : "border-brand-red bg-brand-red/5";
+                          const hoverCls = tc === "gold" ? "hover:border-brand-gold/50" : "hover:border-brand-red/40";
+                          return (
+                            <button key={t.id} data-testid={`tier-${t.id}`} onClick={() => setBrush(ci, { tier_id: t.id })}
+                              className={`rounded-xl border-2 p-3 text-left transition ${sel ? selCls : `border-brand-taupe/20 ${hoverCls}`}`}>
+                              <div className="flex items-center justify-between">
+                                <span className="flex items-center gap-2 font-heading font-bold"><span className={`h-3 w-3 rounded-full ${tc === "gold" ? "bg-brand-gold" : "bg-brand-red"}`} />{t.name}</span>
+                                {sel && <Check className={`h-4 w-4 ${tc === "gold" ? "text-brand-gold" : "text-brand-red"}`} />}
+                              </div>
+                              <p className="mt-1 text-xs text-brand-taupe">{t.description}</p>
+                              <p className={`mt-2 font-bold ${tc === "gold" ? "text-brand-gold" : "text-brand-red"}`}>{inr(t.rate_per_unit)}<span className="text-xs font-normal text-brand-taupe">/unit</span></p>
+                            </button>
+                          );
+                        })}
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {it.tier_id && (
-                      <>
-                        <div className="mb-2 mt-4 flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-sm text-brand-taupe">Select teeth (tap to toggle)</p>
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold">
-                            <span className={`h-3 w-3 rounded ${tColor === "gold" ? "bg-brand-gold" : "bg-brand-red"}`} />
-                            <span className={tColor === "gold" ? "text-brand-gold" : "text-brand-red"}>{tierById[it.tier_id]?.name}</span>
-                          </span>
-                        </div>
-                        <ToothChart color={tColor} selected={it.teeth.map((t) => t.tooth)} onToggle={(tn) => toggleTooth(ci, ii, tn)} />
-                        {it.teeth.length > 0 && (
-                          <div className="mt-3">
-                            <div className="mb-2 flex flex-wrap items-center gap-2">
-                              <span className="text-sm text-brand-taupe">Apply shade to all:</span>
-                              <select className="rounded-lg border border-brand-taupe/30 px-2 py-1 text-sm" value={it.defaultShade} onChange={(e) => applyAllShade(ci, ii, e.target.value)}>
-                                {shades.map((s) => <option key={s}>{s}</option>)}
-                              </select>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                              {it.teeth.map((t) => (
-                                <div key={t.tooth} className="flex items-center gap-2 rounded-lg border border-brand-taupe/20 px-2 py-1.5">
-                                  <span className={`text-sm font-bold ${tColor === "gold" ? "text-brand-gold" : "text-brand-red"}`}>{t.tooth}</span>
-                                  <select data-testid={`tooth-shade-${t.tooth}`} className="flex-1 rounded border-brand-taupe/30 bg-transparent text-sm outline-none" value={t.shade} onChange={(e) => setToothShade(ci, ii, t.tooth, e.target.value)}>
-                                    {shades.map((s) => <option key={s}>{s}</option>)}
-                                  </select>
-                                </div>
-                              ))}
-                            </div>
+                  {c.brush.tier_id && (
+                    <>
+                      <div className="mb-2 mt-4 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm text-brand-taupe">Tap teeth to mark them with the selected tier.</p>
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold">
+                          Now marking: <span className={`h-3 w-3 rounded ${brushColor === "gold" ? "bg-brand-gold" : "bg-brand-red"}`} />
+                          <span className={brushColor === "gold" ? "text-brand-gold" : "text-brand-red"}>{tierById[c.brush.tier_id]?.name}</span>
+                        </span>
+                      </div>
+                      <ToothChart toothColors={colorMap} brushColor={brushColor} onToggle={(tn) => paintTooth(ci, tn)} />
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Per-tier groups: shades, trial & instructions */}
+            {c.items.length > 0 && (
+              <div className="mt-5 space-y-4">
+                {c.items.map((it, ii) => {
+                  const tColor = tierColor(tierById[it.tier_id]?.name);
+                  return (
+                    <div key={it.uid} className="rounded-xl border border-brand-taupe/20 p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <p className="flex items-center gap-2 font-semibold text-brand-graphite">
+                          <span className={`h-3 w-3 rounded-full ${tColor === "gold" ? "bg-brand-gold" : "bg-brand-red"}`} />
+                          {tierById[it.tier_id]?.product_name} · {tierById[it.tier_id]?.name}
+                          <span className="text-xs font-normal text-brand-taupe">({it.teeth.length} {it.teeth.length === 1 ? "tooth" : "teeth"})</span>
+                        </p>
+                        <button onClick={() => delItem(ci, ii)} className="text-brand-red" data-testid={`del-item-${ci}-${ii}`}><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <span className="text-sm text-brand-taupe">Apply shade to all:</span>
+                        <select className="rounded-lg border border-brand-taupe/30 px-2 py-1 text-sm" value={it.defaultShade} onChange={(e) => applyAllShade(ci, ii, e.target.value)}>
+                          {shades.map((s) => <option key={s}>{s}</option>)}
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {it.teeth.map((t) => (
+                          <div key={t.tooth} className="flex items-center gap-2 rounded-lg border border-brand-taupe/20 px-2 py-1.5">
+                            <span className={`text-sm font-bold ${tColor === "gold" ? "text-brand-gold" : "text-brand-red"}`}>{t.tooth}</span>
+                            <select data-testid={`tooth-shade-${t.tooth}`} className="flex-1 rounded border-brand-taupe/30 bg-transparent text-sm outline-none" value={t.shade} onChange={(e) => setToothShade(ci, ii, t.tooth, e.target.value)}>
+                              {shades.map((s) => <option key={s}>{s}</option>)}
+                            </select>
                           </div>
-                        )}
-                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={it.trial_required} onChange={(e) => setItem(ci, ii, { trial_required: e.target.checked })} /> Trial required</label>
-                          <input className={inputCls} placeholder="Stump shade (optional)" value={it.stump_shade} onChange={(e) => setItem(ci, ii, { stump_shade: e.target.value })} />
-                          <div className="sm:col-span-2"><textarea className={inputCls} rows={1} placeholder="Special instructions" value={it.special_instructions} onChange={(e) => setItem(ci, ii, { special_instructions: e.target.value })} /></div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-              <Btn onClick={() => addItem(ci)}><Plus className="h-4 w-4" />Add Tooth/Product Item</Btn>
-            </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={it.trial_required} onChange={(e) => setItem(ci, ii, { trial_required: e.target.checked })} /> Trial required</label>
+                        <input className={inputCls} placeholder="Stump shade (optional)" value={it.stump_shade} onChange={(e) => setItem(ci, ii, { stump_shade: e.target.value })} />
+                        <div className="sm:col-span-2"><textarea className={inputCls} rows={1} placeholder="Special instructions" value={it.special_instructions} onChange={(e) => setItem(ci, ii, { special_instructions: e.target.value })} /></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
         ))}
         <div className="flex justify-center">

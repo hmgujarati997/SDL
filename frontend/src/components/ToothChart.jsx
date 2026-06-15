@@ -11,12 +11,13 @@ const ACTIVE = {
   red: "bg-brand-red text-white border-brand-ruby shadow-md scale-105",
   gold: "bg-brand-gold text-brand-charcoal border-brand-gold shadow-md scale-105",
 };
-const INACTIVE = {
-  red: "bg-white text-brand-graphite border-brand-taupe/30 hover:border-brand-red hover:text-brand-red",
-  gold: "bg-white text-brand-graphite border-brand-taupe/30 hover:border-brand-gold hover:text-brand-gold",
+const HOVER = {
+  red: "hover:border-brand-red hover:text-brand-red",
+  gold: "hover:border-brand-gold hover:text-brand-gold",
 };
 
-function Tooth({ n, active, onClick, color }) {
+function Tooth({ n, color, brushColor, onClick }) {
+  const active = !!color;
   return (
     <button
       type="button"
@@ -24,7 +25,9 @@ function Tooth({ n, active, onClick, color }) {
       onClick={() => onClick(n)}
       className={cn(
         "relative flex h-11 w-9 sm:h-12 sm:w-10 items-center justify-center rounded-md border text-xs font-bold transition-all duration-200",
-        active ? ACTIVE[color] : INACTIVE[color]
+        active
+          ? ACTIVE[color] || ACTIVE.red
+          : `bg-white text-brand-graphite border-brand-taupe/30 ${HOVER[brushColor] || HOVER.red}`
       )}
     >
       {n}
@@ -32,13 +35,16 @@ function Tooth({ n, active, onClick, color }) {
   );
 }
 
-export default function ToothChart({ selected = [], onToggle, color = "red" }) {
-  const c = ACTIVE[color] ? color : "red";
-  const isSel = (n) => selected.includes(n);
+/**
+ * Shared mouth chart. `toothColors` maps a tooth number to its colour
+ * ("red" | "gold"), so multiple products can be marked on the same mouth.
+ * `brushColor` is the currently selected tier's colour (used for hover hints).
+ */
+export default function ToothChart({ toothColors = {}, brushColor = "red", onToggle }) {
   const row = (arr) => (
     <div className="flex gap-1">
       {arr.map((n) => (
-        <Tooth key={n} n={n} active={isSel(n)} onClick={onToggle} color={c} />
+        <Tooth key={n} n={n} color={toothColors[n]} brushColor={brushColor} onClick={onToggle} />
       ))}
     </div>
   );
