@@ -63,7 +63,9 @@ export default function Settings() {
 function LabSection({ lab, onSave }) {
   const [v, setV] = useState(lab);
   const [uploading, setUploading] = useState(false);
+  const [favUploading, setFavUploading] = useState(false);
   const fileRef = useRef(null);
+  const favRef = useRef(null);
   const fields = [["name", "Lab Name"], ["gstin", "GSTIN"], ["address", "Address"], ["state", "State"], ["phone", "Phone"], ["email", "Email"], ["receiving_address", "Receiving Address (for impressions/parcels)"], ["receiving_phone", "Receiving Phone (for shipments)"]];
 
   const uploadLogo = async (e) => {
@@ -83,6 +85,23 @@ function LabSection({ lab, onSave }) {
     if (fileRef.current) fileRef.current.value = "";
   };
 
+  const uploadFavicon = async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setFavUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", f);
+      const { data } = await api.post("/settings/favicon", fd);
+      setV((prev) => ({ ...prev, favicon_url: data.favicon_url }));
+      toast.success("Favicon uploaded & saved");
+    } catch (err) {
+      toast.error(formatApiError(err.response?.data?.detail));
+    }
+    setFavUploading(false);
+    if (favRef.current) favRef.current.value = "";
+  };
+
   return (
     <Card className="max-w-2xl">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -92,7 +111,7 @@ function LabSection({ lab, onSave }) {
             : <span className="text-xs text-brand-taupe">No logo</span>}
         </div>
         <div className="flex-1">
-          <p className="text-sm font-semibold text-brand-graphite">Lab Logo</p>
+          <p className="text-sm font-semibold text-brand-graphite">Lab Logo (header &amp; invoices)</p>
           <p className="mb-2 text-xs text-brand-taupe">Upload a PNG/JPG/WEBP/SVG (max 5 MB) or paste an image URL below.</p>
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-brand-red px-4 py-2 text-sm font-semibold text-white hover:bg-brand-ruby">
             <Upload className="h-4 w-4" />{uploading ? "Uploading…" : "Upload logo"}
@@ -100,6 +119,23 @@ function LabSection({ lab, onSave }) {
           </label>
         </div>
       </div>
+
+      <div className="mb-5 flex flex-col gap-3 border-t border-brand-taupe/15 pt-5 sm:flex-row sm:items-center">
+        <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-brand-taupe/20 bg-brand-ivory">
+          {v.favicon_url
+            ? <img src={v.favicon_url} alt="Favicon" className="h-full w-full object-contain" data-testid="favicon-preview" />
+            : <span className="text-[10px] text-brand-taupe">No icon</span>}
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-brand-graphite">Browser Favicon (tab icon)</p>
+          <p className="mb-2 text-xs text-brand-taupe">Small square icon shown in the browser tab. PNG/ICO/SVG, ideally 32×32 or 64×64 (max 2 MB).</p>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-brand-charcoal px-4 py-2 text-sm font-semibold text-white hover:opacity-90">
+            <Upload className="h-4 w-4" />{favUploading ? "Uploading…" : "Upload favicon"}
+            <input ref={favRef} type="file" accept="image/*,.ico" className="hidden" data-testid="favicon-upload-input" disabled={favUploading} onChange={uploadFavicon} />
+          </label>
+        </div>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         {fields.map(([k, label]) => <Field key={k} label={label}><input className={inputCls} value={v[k] || ""} onChange={(e) => setV({ ...v, [k]: e.target.value })} /></Field>)}
         <Field label="Logo URL"><input data-testid="logo-url-input" className={inputCls} value={v.logo_url || ""} onChange={(e) => setV({ ...v, logo_url: e.target.value })} /></Field>

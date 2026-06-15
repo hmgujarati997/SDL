@@ -126,6 +126,24 @@ async def upload_logo(file: UploadFile = File(...), user: dict = Depends(require
     return {"logo_url": logo_url}
 
 
+@router.post("/settings/favicon")
+async def upload_favicon(file: UploadFile = File(...), user: dict = Depends(require_roles("admin"))):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in LOGO_EXT and ext != ".ico":
+        raise HTTPException(400, f"Unsupported icon type {ext}. Use PNG, ICO, JPG, WEBP or SVG.")
+    data = await file.read()
+    if len(data) > 2 * 1024 * 1024:
+        raise HTTPException(400, "Favicon must be under 2 MB")
+    stored = "favicon_" + gen_id() + ext
+    (UPLOAD_DIR / stored).write_bytes(data)
+    public_url = os.environ.get("APP_PUBLIC_URL", "").rstrip("/")
+    favicon_url = f"{public_url}/api/assets/{stored}"
+    lab = await get_setting("lab", {}) or {}
+    lab["favicon_url"] = favicon_url
+    await db.settings.update_one({"key": "lab"}, {"$set": {"value": lab}}, upsert=True)
+    return {"favicon_url": favicon_url}
+
+
 @router.get("/assets/{name}")
 async def serve_asset(name: str):
     # Public (no auth) — used for logos on the landing page, login and WhatsApp header.

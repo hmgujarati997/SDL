@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import api, { LOGO_MARK as LOGO } from "@/lib/api";
+import { useBranding } from "@/lib/branding";
 import { cn } from "@/lib/utils";
 import { RollButton } from "@/components/RollButton";
 import {
@@ -78,11 +79,12 @@ export function PortalShell({ children }) {
   const items = NAV[user?.role] || [];
 
   const isActive = (it) => (it.end ? loc.pathname === it.to : loc.pathname.startsWith(it.to));
+  const { logo } = useBranding();
 
   const SideContent = () => (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 bg-brand-charcoal px-5 py-4">
-        <img src={LOGO} alt="Shree Dental Lab" className="h-10 w-10 rounded-md object-cover" />
+        <img src={logo} alt="Shree Dental Lab" className="h-10 w-10 rounded-md object-cover" />
         <div>
           <p className="font-heading text-sm font-bold text-white leading-tight">Shree Dental Lab</p>
           <p className="text-[10px] uppercase tracking-widest text-brand-gold">Precision · Quality · Trust</p>
@@ -153,6 +155,7 @@ function useLondonClock() {
 export function PublicNav() {
   const [open, setOpen] = useState(false);
   const time = useLondonClock();
+  const { logo } = useBranding();
   const links = [
     { to: "/", label: "Home" },
     { to: "/about", label: "About" },
@@ -165,7 +168,7 @@ export function PublicNav() {
           {/* Left */}
           <div className="flex items-center gap-5">
             <Link to="/" data-testid="logo-link" className="flex items-center gap-2.5">
-              <img src={LOGO} alt="Shree Dental Lab" className="h-9 w-9 rounded-lg object-cover sm:h-10 sm:w-10" />
+              <img src={logo} alt="Shree Dental Lab" className="h-9 w-9 rounded-lg object-cover sm:h-10 sm:w-10" />
               <span className="hidden font-heading text-sm font-bold tracking-tight text-brand-graphite sm:block">Shree Dental Lab</span>
             </Link>
             <div className="hidden items-center gap-6 md:flex">
@@ -213,12 +216,13 @@ export function PublicNav() {
 }
 
 export function Footer() {
+  const { logo } = useBranding();
   return (
     <footer className="bg-brand-charcoal text-white/70">
       <div className="mx-auto grid max-w-7xl gap-8 px-6 py-12 sm:grid-cols-3">
         <div>
           <div className="flex items-center gap-3">
-            <img src={LOGO} alt="logo" className="h-12 w-12 rounded-md object-cover" />
+            <img src={logo} alt="logo" className="h-12 w-12 rounded-md object-cover" />
             <p className="font-heading text-lg font-bold text-white">Shree Dental Lab</p>
           </div>
           <p className="mt-3 text-sm">Premium zirconia crowns & bridges for dental professionals across India.</p>

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { PortalShell, Spinner } from "@/components/Layout";
+import { FaviconManager } from "@/lib/branding";
 import api, { formatApiError } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -91,6 +92,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Toaster position="top-right" richColors />
+        <FaviconManager />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
