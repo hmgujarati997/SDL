@@ -194,11 +194,31 @@ export default function NewOrder() {
         {/* Step 1 */}
         <Card>
           <h3 className="font-heading text-lg font-bold">1 · Order Settings</h3>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 space-y-4">
             <Field label="How are you sending the case?">
-              <select data-testid="case-input-type" className={inputCls} value={settings.case_input_type} onChange={(e) => setSettings({ ...settings, case_input_type: e.target.value })}>
-                <option>Digital Scan Upload</option><option>Physical Impression</option>
-              </select>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  { value: "Digital Scan Upload", label: "Digital Scan Upload", desc: "Upload your STL / intra-oral scan files", icon: Upload },
+                  { value: "Physical Impression", label: "Physical Impression / Model", desc: "Courier your impression or model to the lab", icon: Package },
+                ].map((opt) => {
+                  const sel = settings.case_input_type === opt.value;
+                  const Icon = opt.icon;
+                  return (
+                    <button key={opt.value} type="button" data-testid={`case-type-${opt.value.replace(/\s+/g, "-").toLowerCase()}`}
+                      onClick={() => setSettings({ ...settings, case_input_type: opt.value })}
+                      className={`flex items-start gap-3 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${sel ? "border-brand-red bg-brand-red/5 shadow-[0_4px_20px_-8px_rgba(193,39,45,0.5)]" : "border-brand-taupe/20 hover:border-brand-red/40 hover:bg-brand-ivory/50"}`}>
+                      <span className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${sel ? "bg-brand-red text-white" : "bg-brand-ivory text-brand-taupe"}`}><Icon className="h-5 w-5" /></span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-2">
+                          <span className="font-heading text-sm font-bold text-brand-graphite sm:text-base">{opt.label}</span>
+                          {sel && <Check className="h-4 w-4 shrink-0 text-brand-red" />}
+                        </span>
+                        <span className="mt-1 block text-xs leading-snug text-brand-taupe">{opt.desc}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </Field>
             <Field label="Where we'll ship your finished work back">
               <div data-testid="profile-delivery-address" className="rounded-lg border border-brand-taupe/20 bg-brand-ivory px-3 py-2 text-sm text-brand-graphite">

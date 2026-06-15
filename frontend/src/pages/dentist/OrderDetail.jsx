@@ -128,7 +128,7 @@ export default function OrderDetail() {
             <h3 className="mb-3 font-heading text-lg font-bold">Patient Cases</h3>
             {o.cases.map((c) => (
               <div key={c.id} className="mb-3 rounded-xl border border-brand-taupe/20 p-4">
-                <p className="font-heading font-bold">{c.patient_name} <span className="text-xs font-normal text-brand-taupe">· {c.case_input_type}</span></p>
+                <p className="font-heading font-bold">{c.patient_name} <span className="text-xs font-normal text-brand-taupe">· {c.case_input_type === "Physical Impression" ? "Physical Impression / Model" : c.case_input_type}</span></p>
                 {o.items.filter((it) => it.case_id === c.id).map((it) => (
                   <div key={it.id} className="mt-2 rounded-lg bg-brand-ivory p-3 text-sm">
                     <p className="font-semibold">{it.product_name} — {it.tier_name} · {it.units} units{it.trial_required && " · Trial"}</p>
