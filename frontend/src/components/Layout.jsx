@@ -156,7 +156,8 @@ function useLondonClock() {
 export function PublicNav() {
   const [open, setOpen] = useState(false);
   const time = useLondonClock();
-  const { logo } = useBranding();
+  const { logo, favicon } = useBranding();
+  const navIcon = favicon || logo;
   const links = [
     { to: "/", label: "Home" },
     { to: "/about", label: "About" },
@@ -169,7 +170,7 @@ export function PublicNav() {
           {/* Left */}
           <div className="flex items-center gap-5">
             <Link to="/" data-testid="logo-link" className="flex items-center gap-2.5">
-              <img src={logo} alt="Shree Dental Lab" className="h-9 w-9 rounded-lg object-cover sm:h-10 sm:w-10" />
+              <img src={navIcon} alt="Shree Dental Lab" className="h-9 w-9 rounded-lg object-cover sm:h-10 sm:w-10" />
               <span className="hidden font-heading text-sm font-bold tracking-tight text-brand-graphite sm:block">Shree Dental Lab</span>
             </Link>
             <div className="hidden items-center gap-6 md:flex">
