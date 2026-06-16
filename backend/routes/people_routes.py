@@ -163,6 +163,12 @@ async def create_user(body: dict = Body(...), user: dict = Depends(require_roles
 @router.put("/users/{uid}")
 async def update_user(uid: str, body: dict = Body(...), user: dict = Depends(require_roles("admin"))):
     upd = {k: v for k, v in body.items() if k in ("name", "mobile", "permissions", "active", "role")}
+    if body.get("email"):
+        email = body["email"].strip().lower()
+        clash = await db.users.find_one({"email": email, "id": {"$ne": uid}})
+        if clash:
+            raise HTTPException(400, "Email already in use by another account")
+        upd["email"] = email
     if body.get("password"):
         upd["password_hash"] = hash_password(body["password"])
     await db.users.update_one({"id": uid}, {"$set": upd})

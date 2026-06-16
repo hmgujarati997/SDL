@@ -39,7 +39,7 @@ export default function Users() {
   const save = async () => {
     try {
       if (editing) {
-        const payload = { name: f.name, mobile: f.mobile, role: f.role, active: f.active,
+        const payload = { name: f.name, email: f.email.trim(), mobile: f.mobile, role: f.role, active: f.active,
           permissions: f.role === "employee" ? f.permissions : [] };
         if (f.password.trim()) payload.password = f.password.trim();
         await api.put(`/users/${editing.id}`, payload);
@@ -104,9 +104,9 @@ export default function Users() {
           <div className="grid gap-3">
             <Field label="Name" required><input data-testid="user-name" className={inputCls} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
             <Field label="Email" required>
-              <input data-testid="user-email" type="email" className={inputCls} value={f.email} disabled={!!editing}
+              <input data-testid="user-email" type="email" className={inputCls} value={f.email}
                 onChange={(e) => setF({ ...f, email: e.target.value })} />
-              {editing && <p className="mt-1 text-xs text-brand-taupe">Email cannot be changed.</p>}
+              {editing && <p className="mt-1 text-xs text-brand-taupe">This is the login email for this member.</p>}
             </Field>
             <Field label="Mobile"><input className={inputCls} value={f.mobile} onChange={(e) => setF({ ...f, mobile: e.target.value })} /></Field>
             <Field label="Role">
