@@ -19,7 +19,6 @@ export default function OrderDetail() {
   const [meta, setMeta] = useState({ statuses: [], file_issue_reasons: [], remake_reasons: [] });
   const [designers, setDesigners] = useState([]);
   const [lab, setLab] = useState({});
-  const isStaff = ["admin", "employee", "designer"].includes(user?.role);
   const isAdmin = user?.role === "admin";
   // Staff (employee) now manage orders like admin, except they cannot add/edit/delete
   // files or delete the order.
@@ -240,7 +239,7 @@ export default function OrderDetail() {
           )}
 
           {/* Staff actions */}
-          {isStaff && (
+          {canManage && (
             <Card>
               <h3 className="mb-3 flex items-center gap-2 font-heading text-lg font-bold"><UserCog className="h-5 w-5 text-brand-red" />Manage</h3>
               <StatusUpdater order={o} statuses={meta.statuses} onDone={load} />
@@ -283,7 +282,7 @@ export default function OrderDetail() {
           )}
 
           {/* WhatsApp log */}
-          {isStaff && (
+          {canManage && (
             <Card>
               <h3 className="mb-3 flex items-center gap-2 font-heading text-lg font-bold"><MessageSquare className="h-5 w-5 text-brand-red" />WhatsApp</h3>
               {o.whatsapp_logs.length === 0 ? <p className="text-sm text-brand-taupe">No messages.</p> : o.whatsapp_logs.slice(0, 8).map((w) => (

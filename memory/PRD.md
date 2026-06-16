@@ -124,6 +124,27 @@ Backend 23/23 pytest PASSED. No critical/UI bugs. Mock: Razorpay payments, Whats
 - **Impression shipping (dentist→lab)**: admin sets lab `receiving_address`/`receiving_phone` (Settings→Lab). Dentist on Impression Awaited orders sees a "Ship Your Impression" card with the lab ship-to address/phone + courier + tracking ID form (POST /api/orders/{id}/impression/ship). Saves tracking on impression_shipments, notifies all admins; admin order page shows "Impression on the way" with courier/tracking/ship date.
 - All verified via curl + screenshots.
 
+## Session 2026-06-16 (fork) — fixes & enhancements
+- **Razorpay post-payment freeze (P0 fixed)**: SPA overlay stayed mounted after success. NewOrder.jsx now calls `rzp.close()` in the success handler (with a `paid` guard so it doesn't fire the cancel toast), and uploads attachments in the background so they can't block the redirect to the order detail page.
+- **Removed "Trial required"** checkbox from the dentist New Order item form (and stopped sending `trial_required`).
+- **Deployment**: CORS_ORIGINS in backend/.env changed from preview domain to `*` (deployment_agent flagged). Login/meta verified 200.
+- **Password eye toggle**: shared `PasswordInput` (UI.jsx) with show/hide eye used on Login, Register, force-change-password (App.js) and Admin→Settings Razorpay Key Secret.
+- **Designer sees notes**: `_designer_view` (order_routes.py) now returns `order_notes`, `case_notes`, and per-item specs (product/tier/units/teeth+shades/special_instructions/stump_shade). DesignerOrderDetail.jsx renders a "Design instructions" card. Still hides patient identity, dentist, pricing.
+- **Dispatch WhatsApp**: dispatched message now includes Courier + Tracking ID; and if NO tracking ID is entered, the WhatsApp is NOT sent (in-app note still logged). `notify()` gained a `whatsapp` gate; update_status reads dispatch_details for the dispatched event.
+- **Admin can change team member email**: PUT /users/{uid} accepts `email` (lowercased, duplicate-checked). Users.jsx email field now editable on edit.
+- **STAFF (employee) role expanded to near-admin for orders** (verified frontend 22/22 iteration_5.json + curl):
+  - Staff now see ALL orders incl Delivered/Cancelled (list_orders no longer restricts employee to running).
+  - Staff CAN: update status (permission gate removed), accept, impression receive/scanned, write dispatch + mark dispatched, print 4x4/A4 labels, raise file issue, assign designer, generate invoice. Endpoints updated to require_roles('admin','employee').
+  - Staff CANNOT: upload/edit/delete files (upload_file 403 for employee; delete_file admin-only) or delete orders (delete_order admin-only).
+  - list_users allows employee ONLY for role=designer (to populate Assign Designer); full team list stays admin-only.
+  - Frontend OrderDetail.jsx: `canManage`=admin|employee gates Manage/Invoice/Dispatch; `canEditFiles`=role!==employee gates Files Upload; DeleteOrderBlock stays admin-only. Team UI: removed the now-defunct "update_status" permission checkbox.
+  - Staff nav unchanged: Orders + Production Board only.
+
+## Backlog / Next
+- P1: SMTP email integration (welcome/reset/order status) — needs user SMTP creds.
+- P1: Razorpay test→live (Key ID+Secret); WhatsApp mock→live (Vendor UID+Token).
+- Consider splitting OrderDetail.jsx (~520 lines) into /pages/order-detail/ subcomponents.
+
 ## Session 2026-06-15 (fork) — Razorpay post-payment freeze fix
 - **Bug**: After a successful Razorpay test payment, the order was created in DB but the page stayed frozen (had to refresh to see the order). Failure/cancel cases worked fine.
 - **Root cause**: SPA + Razorpay — the Razorpay checkout overlay/iframe stayed mounted on top of the app after `handler` ran; `nav()` happened underneath but the overlay covered everything → looked frozen.
