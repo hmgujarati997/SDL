@@ -45,7 +45,7 @@ export default function NewOrder() {
     return { uid: uid(), mode: "new", patient_id: "", new_patient: { name: "", age: "", gender: "" }, notes: "", items: [], brush: { product_id: "", tier_id: "" } };
   }
   function newItem() {
-    return { uid: uid(), product_id: "", tier_id: "", teeth: [], trial_required: false, special_instructions: "", stump_shade: "", defaultShade: "A2" };
+    return { uid: uid(), product_id: "", tier_id: "", teeth: [], special_instructions: "", stump_shade: "", defaultShade: "A2" };
   }
 
   useEffect(() => {
@@ -147,7 +147,7 @@ export default function NewOrder() {
       items: c.items.filter((it) => it.tier_id && it.teeth.length).map((it) => ({
         product_id: it.product_id, product_name: tierById[it.tier_id]?.product_name,
         tier_id: it.tier_id, tier_name: tierById[it.tier_id]?.name, teeth: it.teeth,
-        trial_required: it.trial_required, special_instructions: it.special_instructions, stump_shade: it.stump_shade,
+        special_instructions: it.special_instructions, stump_shade: it.stump_shade,
       })),
     })),
     ...payment,
@@ -395,7 +395,6 @@ export default function NewOrder() {
                         ))}
                       </div>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={it.trial_required} onChange={(e) => setItem(ci, ii, { trial_required: e.target.checked })} /> Trial required</label>
                         <input className={inputCls} placeholder="Stump shade (optional)" value={it.stump_shade} onChange={(e) => setItem(ci, ii, { stump_shade: e.target.value })} />
                         <div className="sm:col-span-2"><textarea className={inputCls} rows={1} placeholder="Special instructions" value={it.special_instructions} onChange={(e) => setItem(ci, ii, { special_instructions: e.target.value })} /></div>
                       </div>
