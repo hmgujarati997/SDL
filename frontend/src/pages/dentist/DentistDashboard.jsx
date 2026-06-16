@@ -31,15 +31,17 @@ export default function DentistDashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard testid="stat-total" label="Total Orders" value={d.total} icon={Package} />
-        <StatCard testid="stat-in-progress" label="Work in Progress" value={d.in_progress} icon={Factory} accent="charcoal" />
-        <StatCard label="Dispatched" value={d.dispatched} icon={Truck} accent="gold" />
-        <StatCard label="Delivered" value={d.delivered} icon={CheckCircle2} accent="green" />
-      </div>
-
       <div className="mt-5 grid gap-5 lg:grid-cols-3">
-        <Card className="order-2 lg:order-1 lg:col-span-2">
+        {/* Stats — 2x2 in the left column */}
+        <div className="order-1 grid grid-cols-2 gap-4 lg:col-span-2 lg:col-start-1 lg:row-start-1">
+          <StatCard testid="stat-total" label="Total Orders" value={d.total} icon={Package} />
+          <StatCard testid="stat-in-progress" label="Work in Progress" value={d.in_progress} icon={Factory} accent="charcoal" />
+          <StatCard label="Dispatched" value={d.dispatched} icon={Truck} accent="gold" />
+          <StatCard label="Delivered" value={d.delivered} icon={CheckCircle2} accent="green" />
+        </div>
+
+        {/* Recent orders — left column, below stats */}
+        <Card className="order-3 lg:col-span-2 lg:col-start-1 lg:row-start-2">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-heading text-lg font-bold">Recent Orders</h3>
             <Link to="/app/orders" className="text-sm font-semibold text-brand-red">View all</Link>
@@ -58,33 +60,34 @@ export default function DentistDashboard() {
           </div>
         </Card>
 
-        <div className="order-1 space-y-5 lg:order-2">
+        {/* Promo sidebar — right column, spans full height next to stats + recent orders */}
+        <div className="order-2 flex flex-col gap-5 lg:col-start-3 lg:row-span-2 lg:row-start-1">
           {/* Cercon premium material promo */}
-          <Card data-testid="cercon-product-card" className="p-4">
-            <div className="flex items-start gap-3">
-              <img src={cerconImg} alt="Cercon xt Multilayer zirconia disc by Dentsply Sirona"
-                className="h-16 w-16 shrink-0 rounded-lg border border-brand-taupe/15 bg-white object-contain" />
-              <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+          <Card data-testid="cercon-product-card" className="flex flex-1 flex-col overflow-hidden p-0">
+            <img src={cerconImg} alt="Cercon xt Multilayer zirconia disc by Dentsply Sirona"
+              className="w-full flex-1 bg-white object-contain p-2" />
+            <div className="border-t border-brand-taupe/10 p-4">
+              <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <h3 className="font-heading text-base font-bold leading-tight text-brand-graphite">Cercon</h3>
+                  <h3 className="font-heading text-lg font-bold leading-tight text-brand-graphite">Cercon</h3>
                   <p className="mt-0.5 text-xs text-brand-taupe">Dentsply Sirona · with box and card</p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="font-heading text-xl font-bold leading-none text-brand-red">₹1,250</p>
+                  <p className="font-heading text-2xl font-bold leading-none text-brand-red">₹1,250</p>
                   <p className="text-xs text-brand-taupe">/ tooth</p>
                 </div>
               </div>
-            </div>
 
-            {/* Certification badge */}
-            <div className="mt-3 overflow-hidden rounded-lg border border-brand-taupe/20">
-              <div className="bg-[#1f3a93] px-3 py-1.5 text-center">
-                <p className="font-heading text-sm font-bold leading-none text-white">Cercon<sup className="text-[8px]">®</sup></p>
-                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-white/90">Premium Zirconium Oxide</p>
-              </div>
-              <div className="flex items-center justify-center gap-1.5 bg-white px-3 py-1.5 text-center">
-                <span className="text-xs font-bold text-brand-graphite">Certified Quality ·</span>
-                <span className="text-xs font-extrabold text-brand-red">Made in Germany</span>
+              {/* Certification badge */}
+              <div className="mt-3 overflow-hidden rounded-lg border border-brand-taupe/20">
+                <div className="bg-[#1f3a93] px-3 py-1.5 text-center">
+                  <p className="font-heading text-sm font-bold leading-none text-white">Cercon<sup className="text-[8px]">®</sup></p>
+                  <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-white/90">Premium Zirconium Oxide</p>
+                </div>
+                <div className="flex items-center justify-center gap-1.5 bg-white px-3 py-1.5 text-center">
+                  <span className="text-xs font-bold text-brand-graphite">Certified Quality ·</span>
+                  <span className="text-xs font-extrabold text-brand-red">Made in Germany</span>
+                </div>
               </div>
             </div>
           </Card>
