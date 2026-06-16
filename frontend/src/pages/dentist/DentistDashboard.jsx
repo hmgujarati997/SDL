@@ -6,6 +6,7 @@ import { PageHeader, StatCard, Card, Btn } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 import { StatusBadge, PayBadge } from "@/components/StatusBadge";
 import { Package, Clock, Factory, Truck, CheckCircle2, IndianRupee, PlusCircle, Wallet, Sparkles, AlertTriangle, ChevronRight } from "lucide-react";
+import cerconImg from "@/assets/cercon-xt-multilayer.jpg";
 
 export default function DentistDashboard() {
   const { user } = useAuth();
@@ -30,9 +31,8 @@ export default function DentistDashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard testid="stat-total" label="Total Orders" value={d.total} icon={Package} />
-        <StatCard testid="stat-pending" label="Pending Orders" value={d.pending} icon={Clock} accent="gold" />
         <StatCard testid="stat-in-progress" label="Work in Progress" value={d.in_progress} icon={Factory} accent="charcoal" />
         <StatCard label="Dispatched" value={d.dispatched} icon={Truck} accent="gold" />
         <StatCard label="Delivered" value={d.delivered} icon={CheckCircle2} accent="green" />
@@ -58,17 +58,38 @@ export default function DentistDashboard() {
           </div>
         </Card>
 
-        <Link to="/app/my-pricing" data-testid="launch-offer-card" className="group block">
-          <Card className="relative h-full overflow-hidden bg-gradient-to-br from-brand-charcoal to-[#1c1416] text-white transition-transform duration-200 group-hover:-translate-y-0.5">
-            <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-brand-gold/20 blur-2xl" />
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-gold px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-charcoal">
-              <Sparkles className="h-3.5 w-3.5" /> Launch Offer
-            </span>
-            <p className="mt-4 font-heading text-2xl font-bold leading-tight">Special launch pricing<br />on every order</p>
-            <p className="mt-2 text-sm text-white/70">Enjoy volume slab discounts and limited-time launch rates. Tap to see your personalised rate card.</p>
-            <span className="mt-5 inline-flex items-center gap-2 text-2xl font-bold text-brand-gold">View My Pricing <ChevronRight className="h-6 w-6 transition-transform group-hover:translate-x-1" /></span>
+        <div className="space-y-5">
+          {/* Cercon premium material promo */}
+          <Card data-testid="cercon-product-card" className="overflow-hidden p-0">
+            <img src={cerconImg} alt="Cercon xt Multilayer zirconia disc by Dentsply Sirona"
+              className="h-44 w-full bg-white object-contain" />
+            <div className="p-5">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-red/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-red">
+                <Sparkles className="h-3.5 w-3.5" /> Premium Material
+              </span>
+              <h3 className="mt-3 font-heading text-lg font-bold leading-tight text-brand-graphite">
+                Cercon <span className="font-normal text-brand-taupe">(Dentsply Sirona)</span>
+              </h3>
+              <p className="mt-1 text-sm text-brand-taupe">with box and card</p>
+              <p className="mt-3 font-heading text-2xl font-bold text-brand-red">
+                ₹1,250 <span className="text-base font-semibold text-brand-graphite">/ tooth</span>
+              </p>
+            </div>
           </Card>
-        </Link>
+
+          {/* Launch offer black box */}
+          <Link to="/app/my-pricing" data-testid="launch-offer-card" className="group block">
+            <Card className="relative h-full overflow-hidden bg-gradient-to-br from-brand-charcoal to-[#1c1416] text-white transition-transform duration-200 group-hover:-translate-y-0.5">
+              <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-brand-gold/20 blur-2xl" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-gold px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-charcoal">
+                <Sparkles className="h-3.5 w-3.5" /> Launch Offer
+              </span>
+              <p className="mt-4 font-heading text-2xl font-bold leading-tight">Special launch pricing<br />on every order</p>
+              <p className="mt-2 text-sm text-white/70">Enjoy volume slab discounts and limited-time launch rates. Tap to see your personalised rate card.</p>
+              <span className="mt-5 inline-flex items-center gap-2 text-2xl font-bold text-brand-gold">View My Pricing <ChevronRight className="h-6 w-6 transition-transform group-hover:translate-x-1" /></span>
+            </Card>
+          </Link>
+        </div>
       </div>
     </div>
   );
