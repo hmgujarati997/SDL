@@ -137,7 +137,11 @@ async def delete_dentist(did: str, user: dict = Depends(require_roles("admin")))
 
 # ---------- Admin: users (employee/designer/admin) ----------
 @router.get("/users")
-async def list_users(role: Optional[str] = None, user: dict = Depends(require_roles("admin"))):
+async def list_users(role: Optional[str] = None, user: dict = Depends(require_roles("admin", "employee"))):
+    # Production staff may only look up designers (to assign a case); full team
+    # management stays admin-only.
+    if user["role"] == "employee" and role != "designer":
+        raise HTTPException(403, "Insufficient permissions")
     q = {"role": {"$in": ["admin", "employee", "designer"]}}
     if role:
         q["role"] = role

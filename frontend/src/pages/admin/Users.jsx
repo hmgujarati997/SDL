@@ -33,19 +33,15 @@ export default function Users() {
     setOpen(true);
   };
 
-  const canUpdateStatus = (f.permissions || []).includes("update_status");
-  const setCanUpdateStatus = (on) => setF({ ...f, permissions: on ? ["update_status"] : [] });
-
   const save = async () => {
     try {
       if (editing) {
-        const payload = { name: f.name, email: f.email.trim(), mobile: f.mobile, role: f.role, active: f.active,
-          permissions: f.role === "employee" ? f.permissions : [] };
+        const payload = { name: f.name, email: f.email.trim(), mobile: f.mobile, role: f.role, active: f.active };
         if (f.password.trim()) payload.password = f.password.trim();
         await api.put(`/users/${editing.id}`, payload);
         toast.success("Team member updated");
       } else {
-        await api.post("/users", { ...f, permissions: f.role === "employee" ? (f.permissions.length ? f.permissions : ["update_status"]) : [] });
+        await api.post("/users", { ...f, permissions: f.role === "employee" ? ["update_status"] : [] });
         toast.success("Team member created");
       }
       setOpen(false); setF(EMPTY); setEditing(null); load();
@@ -81,7 +77,7 @@ export default function Users() {
               <span className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wider ${ROLE_BADGE[u.role] || "bg-brand-charcoal text-white"}`}>{u.role}</span>
             </div>
             {u.role === "employee" && (
-              <p className="mt-2 text-xs text-brand-taupe">{(u.permissions || []).includes("update_status") ? "Can update order status" : "View only"}</p>
+              <p className="mt-2 text-xs text-brand-taupe">Full order management · cannot edit files or delete orders</p>
             )}
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <button data-testid={`toggle-active-${u.id}`} onClick={() => toggleActive(u)}
@@ -117,10 +113,7 @@ export default function Users() {
               </select>
             </Field>
             {f.role === "employee" && (
-              <label className="flex items-center gap-2 text-sm text-brand-graphite">
-                <input type="checkbox" data-testid="perm-update-status" checked={canUpdateStatus} onChange={(e) => setCanUpdateStatus(e.target.checked)} />
-                Can update order status
-              </label>
+              <p className="rounded-lg bg-brand-ivory p-2.5 text-xs text-brand-taupe">Production staff can manage orders (status, accept, dispatch, labels, invoices, assign designer) but cannot add/edit/delete files or delete orders.</p>
             )}
             <Field label={editing ? "Set new password (leave blank to keep current)" : "Password"} required={!editing}>
               <div className="relative">

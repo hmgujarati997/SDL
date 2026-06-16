@@ -337,8 +337,6 @@ async def list_orders(status: Optional[str] = None, q: Optional[str] = None,
                       user: dict = Depends(get_current_user)):
     query = {}
     is_dentist = user["role"] == "dentist"
-    is_employee = user["role"] == "employee"
-    TERMINAL = ["Delivered", "Cancelled"]
     if is_dentist:
         dent = await db.dentists.find_one({"user_id": user["id"]}, {"_id": 0})
         query["dentist_id"] = dent["id"] if dent else "__none__"
@@ -352,14 +350,8 @@ async def list_orders(status: Optional[str] = None, q: Optional[str] = None,
                 query["status"] = {"$nin": list(DENTIST_VISIBLE_STATUSES)}
             else:
                 query["status"] = status
-        elif is_employee and status in TERMINAL:
-            # Staff only ever see running orders, never completed/cancelled ones.
-            query["status"] = {"$nin": TERMINAL}
         else:
             query["status"] = status
-    elif is_employee:
-        # Staff list shows running orders only — delivered/cancelled drop off.
-        query["status"] = {"$nin": TERMINAL}
     if designer_id:
         query["designer_id"] = designer_id
     if remake is not None:
@@ -599,6 +591,8 @@ async def upload_file(bid: str, file: UploadFile = File(...), level: str = Form(
     batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
     if not batch:
         raise HTTPException(404, "Order not found")
+    if user["role"] == "employee":
+        raise HTTPException(403, "Staff cannot add or modify files")
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_FILE_EXT:
         raise HTTPException(400, f"File type {ext} not allowed")
@@ -674,8 +668,6 @@ class StatusIn(BaseModel):
 @router.post("/orders/{bid}/status")
 async def update_status(bid: str, body: StatusIn,
                         user: dict = Depends(require_roles("admin", "employee"))):
-    if user["role"] == "employee" and "update_status" not in (user.get("permissions") or []):
-        raise HTTPException(403, "No permission to update status")
     batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
     if not batch:
         raise HTTPException(404, "Order not found")
@@ -733,7 +725,7 @@ async def update_status(bid: str, body: StatusIn,
 # ---------------- Accept (per-tooth verify) ----------------
 @router.post("/orders/{bid}/accept")
 async def accept_order(bid: str, body: dict = Body(default={}),
-                       user: dict = Depends(require_roles("admin"))):
+                       user: dict = Depends(require_roles("admin", "employee"))):
     batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
     if not batch:
         raise HTTPException(404, "Order not found")
@@ -747,7 +739,7 @@ async def accept_order(bid: str, body: dict = Body(default={}),
 
 # ---------------- File issue ----------------
 @router.post("/orders/{bid}/file-issue")
-async def file_issue(bid: str, body: dict = Body(...), user: dict = Depends(require_roles("admin"))):
+async def file_issue(bid: str, body: dict = Body(...), user: dict = Depends(require_roles("admin", "employee"))):
     batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
     if not batch:
         raise HTTPException(404, "Order not found")
@@ -764,7 +756,7 @@ async def file_issue(bid: str, body: dict = Body(...), user: dict = Depends(requ
 
 # ---------------- Assign designer ----------------
 @router.post("/orders/{bid}/assign-designer")
-async def assign_designer(bid: str, body: dict = Body(...), user: dict = Depends(require_roles("admin"))):
+async def assign_designer(bid: str, body: dict = Body(...), user: dict = Depends(require_roles("admin", "employee"))):
     designer = await db.users.find_one({"id": body["designer_id"], "role": "designer"}, {"_id": 0})
     if not designer:
         raise HTTPException(400, "Designer not found")
@@ -1025,7 +1017,7 @@ async def dispatch_label(bid: str, size: str = "4x4", user: dict = Depends(requi
 
 # ---------------- Invoice ----------------
 @router.post("/orders/{bid}/invoice")
-async def generate_invoice(bid: str, body: dict = Body(default={}), user: dict = Depends(require_roles("admin"))):
+async def generate_invoice(bid: str, body: dict = Body(default={}), user: dict = Depends(require_roles("admin", "employee"))):
     batch = await db.order_batches.find_one({"id": bid}, {"_id": 0})
     if not batch:
         raise HTTPException(404, "Order not found")

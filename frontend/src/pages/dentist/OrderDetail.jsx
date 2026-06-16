@@ -21,13 +21,17 @@ export default function OrderDetail() {
   const [lab, setLab] = useState({});
   const isStaff = ["admin", "employee", "designer"].includes(user?.role);
   const isAdmin = user?.role === "admin";
+  // Staff (employee) now manage orders like admin, except they cannot add/edit/delete
+  // files or delete the order.
+  const canManage = ["admin", "employee"].includes(user?.role);
+  const canEditFiles = user?.role !== "employee";
 
   const load = useCallback(() => api.get(`/orders/${id}`).then(({ data }) => setO(data)).catch(() => {}), [id]);
   useEffect(() => {
     load();
     api.get("/meta").then(({ data }) => setMeta(data)).catch(() => {});
     api.get("/settings/public").then(({ data }) => setLab(data.lab || {})).catch(() => {});
-    if (user?.role === "admin") api.get("/users?role=designer").then(({ data }) => setDesigners(data)).catch(() => {});
+    if (canManage) api.get("/users?role=designer").then(({ data }) => setDesigners(data)).catch(() => {});
   }, [load]);
 
   const dl = (url) => window.open(`${API}${url}`, "_blank");
@@ -73,7 +77,7 @@ export default function OrderDetail() {
         </div>
       )}
 
-      {isAdmin && o.design_submitted && (
+      {canManage && o.design_submitted && (
         <div className="mt-4 flex items-center gap-3 rounded-xl border border-green-300 bg-green-50 p-4" data-testid="design-submitted-banner">
           <CheckCircle2 className="h-5 w-5 text-green-600" />
           <p className="text-sm text-brand-graphite">The designer has uploaded a design. Review the <b>design file</b> below — mark status <b>"Design Received"</b> if it's correct, or contact the designer to re-upload.</p>
@@ -162,10 +166,12 @@ export default function OrderDetail() {
           <Card>
             <div className="mb-3 flex items-center justify-between">
               <h3 className="font-heading text-lg font-bold">Files</h3>
-              <label className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-brand-red px-4 py-2 text-sm font-semibold text-white hover:bg-brand-ruby">
-                <Upload className="h-4 w-4" />Upload
-                <input type="file" className="hidden" data-testid="detail-file-upload" onChange={(e) => uploadFile(e, user.role === "designer" ? "designer" : user.role === "dentist" ? "dentist" : "internal")} />
-              </label>
+              {canEditFiles && (
+                <label className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-brand-red px-4 py-2 text-sm font-semibold text-white hover:bg-brand-ruby">
+                  <Upload className="h-4 w-4" />Upload
+                  <input type="file" className="hidden" data-testid="detail-file-upload" onChange={(e) => uploadFile(e, user.role === "designer" ? "designer" : user.role === "dentist" ? "dentist" : "internal")} />
+                </label>
+              )}
             </div>
             {(() => {
               const isImg = (f) => f.category === "photo" || /\.(jpe?g|png|webp)$/i.test(f.filename || "");
@@ -238,8 +244,8 @@ export default function OrderDetail() {
             <Card>
               <h3 className="mb-3 flex items-center gap-2 font-heading text-lg font-bold"><UserCog className="h-5 w-5 text-brand-red" />Manage</h3>
               <StatusUpdater order={o} statuses={meta.statuses} onDone={load} />
-              {isAdmin && o.status === "Order Received" && <AcceptBlock order={o} onDone={load} />}
-              {isAdmin && (
+              {canManage && o.status === "Order Received" && <AcceptBlock order={o} onDone={load} />}
+              {canManage && (
                 <div className="mt-3 space-y-2">
                   <FileIssueBlock order={o} reasons={meta.file_issue_reasons} onDone={load} />
                   <AssignDesigner order={o} designers={designers} onDone={load} />
@@ -262,8 +268,8 @@ export default function OrderDetail() {
             </Card>
           )}
 
-          {/* Admin: invoice + dispatch + payment */}
-          {isAdmin && (
+          {/* Invoice + dispatch (admin & staff) */}
+          {canManage && (
             <>
               <Card>
                 <h3 className="mb-3 flex items-center gap-2 font-heading text-lg font-bold"><FileText className="h-5 w-5 text-brand-red" />Invoice</h3>
@@ -272,7 +278,7 @@ export default function OrderDetail() {
               </Card>
               <DispatchBlock order={o} onDone={load} dl={dl} act={act} />
               {o.remakes?.length > 0 && <Card><h3 className="mb-2 font-heading font-bold">Remake Orders</h3>{o.remakes.map((r) => <Link key={r.id} to={`/app/orders/${r.id}`} className="block text-sm font-semibold text-brand-red">{r.batch_no}</Link>)}</Card>}
-              <DeleteOrderBlock order={o} onDeleted={() => navigate("/app/orders")} />
+              {isAdmin && <DeleteOrderBlock order={o} onDeleted={() => navigate("/app/orders")} />}
             </>
           )}
 
