@@ -56,6 +56,46 @@ export default function DesignerOrderDetail() {
         {o.design_submitted && <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700"><CheckCircle2 className="h-4 w-4" />Design submitted — awaiting admin review</span>}
       </Card>
 
+      {/* Design instructions */}
+      {(o.order_notes || (o.case_notes && o.case_notes.length > 0) || (o.items && o.items.length > 0)) && (
+        <Card className="mb-5" data-testid="designer-instructions">
+          <h2 className="mb-3 font-heading text-lg font-bold">Design instructions</h2>
+          {o.order_notes && (
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-brand-taupe">Order note</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-brand-graphite" data-testid="designer-order-note">{o.order_notes}</p>
+            </div>
+          )}
+          {o.case_notes && o.case_notes.length > 0 && (
+            <div className="mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-brand-taupe">Case notes</p>
+              <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-brand-graphite">
+                {o.case_notes.map((n, i) => <li key={i} className="whitespace-pre-wrap">{n}</li>)}
+              </ul>
+            </div>
+          )}
+          {o.items && o.items.length > 0 && (
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-brand-taupe">Specifications</p>
+              <div className="space-y-2">
+                {o.items.map((it, i) => (
+                  <div key={i} className="rounded-lg border border-brand-taupe/15 p-3 text-sm" data-testid={`designer-item-${i}`}>
+                    <p className="font-semibold text-brand-graphite">
+                      {it.product_name}{it.tier_name ? ` · ${it.tier_name}` : ""} <span className="font-normal text-brand-taupe">× {it.units}</span>
+                    </p>
+                    {it.teeth && it.teeth.length > 0 && (
+                      <p className="mt-1 text-brand-taupe">Teeth: <span className="font-medium text-brand-graphite">{it.teeth.map((t) => (typeof t === "object" ? `${t.tooth}${t.shade ? ` (${t.shade})` : ""}` : t)).join(", ")}</span></p>
+                    )}
+                    {it.stump_shade && <p className="mt-0.5 text-brand-taupe">Stump shade: <span className="font-medium text-brand-graphite">{it.stump_shade}</span></p>}
+                    {it.special_instructions && <p className="mt-0.5 whitespace-pre-wrap text-brand-taupe">Note: <span className="font-medium text-brand-graphite">{it.special_instructions}</span></p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
       {/* Files from clinic */}
       <Card className="mb-5">
         <h2 className="mb-3 font-heading text-lg font-bold">Files to work on</h2>

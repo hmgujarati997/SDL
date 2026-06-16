@@ -401,11 +401,24 @@ async def _designer_files(bid):
     return [f for f in files if f.get("category") in DESIGNER_FILE_CATEGORIES]
 
 
-def _designer_view(batch, files):
+async def _designer_view(batch, files):
+    # Designers get the written instructions (order/case notes + per-item special
+    # instructions + design specs) so they can design accordingly — but still no
+    # patient identity, dentist, or pricing.
+    cases = await db.order_cases.find(
+        {"batch_id": batch["id"]}, {"_id": 0, "id": 1, "notes": 1}).to_list(200)
+    items = await db.order_items.find(
+        {"batch_id": batch["id"]},
+        {"_id": 0, "case_id": 1, "product_name": 1, "tier_name": 1, "units": 1,
+         "teeth": 1, "special_instructions": 1, "stump_shade": 1}).to_list(500)
+    case_notes = [c.get("notes", "") for c in cases if c.get("notes")]
     return {
         "id": batch["id"], "batch_no": batch["batch_no"], "status": batch["status"],
         "created_at": batch.get("created_at"), "updated_at": batch.get("updated_at"),
         "design_submitted": batch.get("design_submitted", False), "files": files,
+        "order_notes": batch.get("notes", ""),
+        "case_notes": case_notes,
+        "items": items,
     }
 
 
@@ -418,7 +431,7 @@ async def designer_order_detail(bid: str, user: dict = Depends(require_roles("de
     if user["role"] == "designer" and batch.get("designer_id") != user["id"]:
         raise HTTPException(403, "This case is not assigned to you")
     files = await _designer_files(batch["id"])
-    return _designer_view(batch, files)
+    return await _designer_view(batch, files)
 
 
 def _mask_detail_for_dentist(detail):
@@ -536,7 +549,7 @@ async def get_order(bid: str, user: dict = Depends(get_current_user)):
         # Designers only ever see order no + files via the restricted view.
         if batch.get("designer_id") != user["id"]:
             raise HTTPException(403, "This case is not assigned to you")
-        return _designer_view(batch, await _designer_files(batch["id"]))
+        return await _designer_view(batch, await _designer_files(batch["id"]))
     if user["role"] == "dentist":
         dent = await db.dentists.find_one({"user_id": user["id"]}, {"_id": 0})
         if not dent or batch["dentist_id"] != dent["id"]:
