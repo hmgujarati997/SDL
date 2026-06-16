@@ -42,7 +42,7 @@ async def _dentist_of(batch):
     return await db.dentists.find_one({"id": batch["dentist_id"]}, {"_id": 0})
 
 
-async def notify(batch, event, fields, *, title, body, status_text=None):
+async def notify(batch, event, fields, *, title, body, status_text=None, whatsapp=True):
     dent = await _dentist_of(batch)
     suffix = batch["batch_no"]
     patient = ""
@@ -50,7 +50,7 @@ async def notify(batch, event, fields, *, title, body, status_text=None):
     if cases:
         patient = ", ".join(c["patient_name"] for c in cases[:2])
     # WhatsApp is sent ONLY when an order is received and when it is couriered (dispatched).
-    if event in WHATSAPP_SEND_EVENTS:
+    if event in WHATSAPP_SEND_EVENTS and whatsapp:
         await send_whatsapp(
             event=event, to_phone=(dent or {}).get("whatsapp", ""),
             dentist_name=(dent or {}).get("name", ""), order_no=batch["batch_no"],
@@ -709,10 +709,24 @@ async def update_status(bid: str, body: StatusIn,
     if ev:
         cases = await db.order_cases.find({"batch_id": bid}, {"_id": 0}).to_list(50)
         pname = ", ".join(c["patient_name"] for c in cases[:2])
-        await notify(batch, ev, f5(f"Update for your order.", f"Order No: {batch['batch_no']}",
-                                   f"Patient: {pname}", f"Current Status: {body.status}",
-                                   "Track your order from the dashboard."),
-                     title="Order update", body=f"{batch['batch_no']}: {body.status}")
+        if ev == "dispatched":
+            # Include courier + tracking ID in the dispatch WhatsApp. If no tracking ID
+            # has been entered, the WhatsApp message is NOT sent (only an in-app note).
+            disp = await db.dispatch_details.find_one({"batch_id": bid}, {"_id": 0}) or {}
+            tracking = (disp.get("tracking_no") or "").strip()
+            courier = (disp.get("courier_name") or "").strip()
+            await notify(batch, ev,
+                         f5("Your order has been dispatched.", f"Order No: {batch['batch_no']}",
+                            f"Courier: {courier}" if courier else f"Patient: {pname}",
+                            f"Tracking ID: {tracking}" if tracking else "Tracking ID: —",
+                            "Track your order from the dashboard."),
+                         title="Order update", body=f"{batch['batch_no']}: {body.status}",
+                         whatsapp=bool(tracking))
+        else:
+            await notify(batch, ev, f5(f"Update for your order.", f"Order No: {batch['batch_no']}",
+                                       f"Patient: {pname}", f"Current Status: {body.status}",
+                                       "Track your order from the dashboard."),
+                         title="Order update", body=f"{batch['batch_no']}: {body.status}")
     return {"ok": True, "status": body.status, "expected_delivery": upd.get("expected_delivery")}
 
 
