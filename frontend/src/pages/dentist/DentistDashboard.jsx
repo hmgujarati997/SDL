@@ -39,7 +39,7 @@ export default function DentistDashboard() {
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className="order-2 lg:order-1 lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-heading text-lg font-bold">Recent Orders</h3>
             <Link to="/app/orders" className="text-sm font-semibold text-brand-red">View all</Link>
@@ -58,19 +58,29 @@ export default function DentistDashboard() {
           </div>
         </Card>
 
-        <div className="space-y-5">
+        <div className="order-1 space-y-5 lg:order-2">
           {/* Cercon premium material promo */}
           <Card data-testid="cercon-product-card" className="overflow-hidden p-0">
             <img src={cerconImg} alt="Cercon xt Multilayer zirconia disc by Dentsply Sirona"
-              className="h-44 w-full bg-white object-contain" />
-            <div className="p-5">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-red/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-red">
-                <Sparkles className="h-3.5 w-3.5" /> Premium Material
-              </span>
-              <h3 className="mt-3 font-heading text-lg font-bold leading-tight text-brand-graphite">
+              className="h-32 w-full bg-white object-contain" />
+            <div className="p-4">
+              <h3 className="font-heading text-lg font-bold leading-tight text-brand-graphite">
                 Cercon <span className="font-normal text-brand-taupe">(Dentsply Sirona)</span>
               </h3>
-              <p className="mt-1 text-sm text-brand-taupe">with box and card</p>
+              <p className="mt-0.5 text-sm text-brand-taupe">with box and card</p>
+
+              {/* Certification badge */}
+              <div className="mt-3 overflow-hidden rounded-xl border border-brand-taupe/20">
+                <div className="bg-[#1f3a93] px-3 py-2 text-center">
+                  <p className="font-heading text-base font-bold leading-none text-white">Cercon<sup className="text-[9px]">®</sup></p>
+                  <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-white/90">Premium Zirconium Oxide</p>
+                </div>
+                <div className="bg-white px-3 py-2 text-center">
+                  <p className="text-sm font-bold text-brand-graphite">Certified Quality</p>
+                  <p className="text-sm font-extrabold text-brand-red">Made in Germany</p>
+                </div>
+              </div>
+
               <p className="mt-3 font-heading text-2xl font-bold text-brand-red">
                 ₹1,250 <span className="text-base font-semibold text-brand-graphite">/ tooth</span>
               </p>
@@ -79,7 +89,7 @@ export default function DentistDashboard() {
 
           {/* Launch offer black box */}
           <Link to="/app/my-pricing" data-testid="launch-offer-card" className="group block">
-            <Card className="relative h-full overflow-hidden bg-gradient-to-br from-brand-charcoal to-[#1c1416] text-white transition-transform duration-200 group-hover:-translate-y-0.5">
+            <Card className="relative overflow-hidden bg-gradient-to-br from-brand-charcoal to-[#1c1416] text-white transition-transform duration-200 group-hover:-translate-y-0.5">
               <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-brand-gold/20 blur-2xl" />
               <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-gold px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-charcoal">
                 <Sparkles className="h-3.5 w-3.5" /> Launch Offer
