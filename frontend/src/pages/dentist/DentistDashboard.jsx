@@ -31,7 +31,7 @@ export default function DentistDashboard() {
         </div>
       )}
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+      <div className="mt-5 grid gap-5 lg:grid-cols-3 lg:grid-rows-[auto_1fr]">
         {/* Stats — 2x2 in the left column */}
         <div className="order-1 grid grid-cols-2 gap-4 lg:col-span-2 lg:col-start-1 lg:row-start-1">
           <StatCard testid="stat-total" label="Total Orders" value={d.total} icon={Package} />
