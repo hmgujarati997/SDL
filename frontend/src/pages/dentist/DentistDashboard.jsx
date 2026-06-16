@@ -60,30 +60,32 @@ export default function DentistDashboard() {
 
         <div className="order-1 space-y-5 lg:order-2">
           {/* Cercon premium material promo */}
-          <Card data-testid="cercon-product-card" className="overflow-hidden p-0">
-            <img src={cerconImg} alt="Cercon xt Multilayer zirconia disc by Dentsply Sirona"
-              className="h-32 w-full bg-white object-contain" />
-            <div className="p-4">
-              <h3 className="font-heading text-lg font-bold leading-tight text-brand-graphite">
-                Cercon <span className="font-normal text-brand-taupe">(Dentsply Sirona)</span>
-              </h3>
-              <p className="mt-0.5 text-sm text-brand-taupe">with box and card</p>
-
-              {/* Certification badge */}
-              <div className="mt-3 overflow-hidden rounded-xl border border-brand-taupe/20">
-                <div className="bg-[#1f3a93] px-3 py-2 text-center">
-                  <p className="font-heading text-base font-bold leading-none text-white">Cercon<sup className="text-[9px]">®</sup></p>
-                  <p className="mt-1 text-[11px] font-bold uppercase tracking-wide text-white/90">Premium Zirconium Oxide</p>
+          <Card data-testid="cercon-product-card" className="p-4">
+            <div className="flex items-start gap-3">
+              <img src={cerconImg} alt="Cercon xt Multilayer zirconia disc by Dentsply Sirona"
+                className="h-16 w-16 shrink-0 rounded-lg border border-brand-taupe/15 bg-white object-contain" />
+              <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="font-heading text-base font-bold leading-tight text-brand-graphite">Cercon</h3>
+                  <p className="mt-0.5 text-xs text-brand-taupe">Dentsply Sirona · with box and card</p>
                 </div>
-                <div className="bg-white px-3 py-2 text-center">
-                  <p className="text-sm font-bold text-brand-graphite">Certified Quality</p>
-                  <p className="text-sm font-extrabold text-brand-red">Made in Germany</p>
+                <div className="shrink-0 text-right">
+                  <p className="font-heading text-xl font-bold leading-none text-brand-red">₹1,250</p>
+                  <p className="text-xs text-brand-taupe">/ tooth</p>
                 </div>
               </div>
+            </div>
 
-              <p className="mt-3 font-heading text-2xl font-bold text-brand-red">
-                ₹1,250 <span className="text-base font-semibold text-brand-graphite">/ tooth</span>
-              </p>
+            {/* Certification badge */}
+            <div className="mt-3 overflow-hidden rounded-lg border border-brand-taupe/20">
+              <div className="bg-[#1f3a93] px-3 py-1.5 text-center">
+                <p className="font-heading text-sm font-bold leading-none text-white">Cercon<sup className="text-[8px]">®</sup></p>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-white/90">Premium Zirconium Oxide</p>
+              </div>
+              <div className="flex items-center justify-center gap-1.5 bg-white px-3 py-1.5 text-center">
+                <span className="text-xs font-bold text-brand-graphite">Certified Quality ·</span>
+                <span className="text-xs font-extrabold text-brand-red">Made in Germany</span>
+              </div>
             </div>
           </Card>
 
