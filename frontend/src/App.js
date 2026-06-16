@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { PortalShell, Spinner } from "@/components/Layout";
+import { PasswordInput } from "@/components/UI";
 import { FaviconManager } from "@/lib/branding";
 import api, { formatApiError } from "@/lib/api";
 import { toast } from "sonner";
@@ -48,8 +49,9 @@ function ChangePassword() {
       <form onSubmit={submit} className="w-full max-w-md rounded-2xl bg-white p-8 brand-shadow">
         <h2 className="font-heading text-2xl font-bold">Set a new password</h2>
         <p className="mt-1 text-sm text-brand-taupe">For your security, please change the default password.</p>
-        <input type="password" required minLength={6} value={pw} onChange={(e) => setPw(e.target.value)} placeholder="New password"
-          className="mt-5 w-full rounded-lg border border-brand-taupe/30 px-3 py-2.5 outline-none focus:border-brand-red" data-testid="new-password-input" />
+        <div className="mt-5">
+          <PasswordInput required minLength={6} value={pw} onChange={(e) => setPw(e.target.value)} placeholder="New password" data-testid="new-password-input" />
+        </div>
         <button className="mt-5 w-full rounded-full bg-brand-red py-3 font-semibold text-white hover:bg-brand-ruby" data-testid="set-password-btn">Update Password</button>
       </form>
     </div>

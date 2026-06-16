@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { formatApiError, LOGO_MARK as LOGO } from "@/lib/api";
+import { PasswordInput } from "@/components/UI";
 import Seo from "@/components/Seo";
 import { toast } from "sonner";
 
@@ -56,7 +57,7 @@ export default function Register() {
             <div><label className="mb-1 block text-sm text-brand-taupe">WhatsApp Number</label>
               <input data-testid="reg-whatsapp" value={f.whatsapp} onChange={upd("whatsapp")} placeholder="Notifications go here" className="w-full rounded-lg border border-brand-taupe/30 px-3 py-2.5 outline-none focus:border-brand-red" /></div>
             <div><label className="mb-1 block text-sm text-brand-taupe">Password *</label>
-              <input data-testid="reg-password" type="password" required value={f.password} onChange={upd("password")} className="w-full rounded-lg border border-brand-taupe/30 px-3 py-2.5 outline-none focus:border-brand-red" /></div>
+              <PasswordInput data-testid="reg-password" required value={f.password} onChange={upd("password")} /></div>
           </div>
           <button data-testid="reg-submit" disabled={loading}
             className="mt-6 w-full rounded-full bg-brand-red py-3 font-semibold text-white transition hover:bg-brand-ruby disabled:opacity-60">

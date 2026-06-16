@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import api, { formatApiError } from "@/lib/api";
-import { PageHeader, Card, Btn, Field, inputCls } from "@/components/UI";
+import { PageHeader, Card, Btn, Field, inputCls, PasswordInput } from "@/components/UI";
 import { Spinner } from "@/components/Layout";
 import { toast } from "sonner";
 import StatusMaster from "@/pages/admin/StatusMaster";
@@ -38,7 +38,7 @@ export default function Settings() {
         <Card className="max-w-lg space-y-3">
           <label className="flex items-center gap-2"><input data-testid="razorpay-enabled" type="checkbox" defaultChecked={s.razorpay?.enabled} onChange={(e) => setS({ ...s, razorpay: { ...s.razorpay, enabled: e.target.checked } })} /> Enable online payments</label>
           <Field label="Key ID"><input data-testid="razorpay-key" className={inputCls} defaultValue={s.razorpay?.key_id} onChange={(e) => setS({ ...s, razorpay: { ...s.razorpay, key_id: e.target.value } })} /></Field>
-          <Field label="Key Secret"><input className={inputCls} type="password" defaultValue={s.razorpay?.key_secret} onChange={(e) => setS({ ...s, razorpay: { ...s.razorpay, key_secret: e.target.value } })} /></Field>
+          <Field label="Key Secret"><PasswordInput defaultValue={s.razorpay?.key_secret} onChange={(e) => setS({ ...s, razorpay: { ...s.razorpay, key_secret: e.target.value } })} /></Field>
           <p className="rounded-lg bg-brand-gold/10 p-2 text-xs text-brand-graphite">When disabled or unconfigured, payments run in mock mode for testing.</p>
           <Btn onClick={() => save("razorpay", s.razorpay)}>Save Razorpay</Btn>
         </Card>

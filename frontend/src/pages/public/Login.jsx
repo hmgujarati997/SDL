@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { formatApiError, LOGO_MARK as LOGO } from "@/lib/api";
+import { PasswordInput } from "@/components/UI";
 import Seo from "@/components/Seo";
 import { toast } from "sonner";
 
@@ -51,8 +52,7 @@ export default function Login() {
           <input data-testid="login-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-lg border border-brand-taupe/30 px-3 py-2.5 outline-none focus:border-brand-red" />
           <label className="mb-1 mt-4 block text-sm text-brand-taupe">Password</label>
-          <input data-testid="login-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-brand-taupe/30 px-3 py-2.5 outline-none focus:border-brand-red" />
+          <PasswordInput data-testid="login-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
           <button data-testid="login-submit" disabled={loading}
             className="mt-6 w-full rounded-full bg-brand-red py-3 font-semibold text-white transition hover:bg-brand-ruby disabled:opacity-60">
             {loading ? "Signing in..." : "Login"}
